@@ -535,6 +535,7 @@ ALL_EMULATION_SOURCES = \
 	eelf32i370.c \
 	eelf32ip2k.c \
 	eelf32iq10.c \
+	eelf32lily2.c \
 	eelf32iq2000.c \
 	eelf32lm32.c \
 	eelf32lm32fd.c \
@@ -1187,6 +1188,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32iq10.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32iq2000.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32l4300.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32lily2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32lm32.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32lm32fd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32lmip.Po@am__quote@
@@ -2572,8 +2574,11 @@ eelf32l4300.c: $(srcdir)/emulparams/elf32l4300.sh \
   $(ELF_DEPS) $(srcdir)/emultempl/mipself.em $(srcdir)/scripttempl/elf.sc \
   ${GEN_DEPENDS}
 	${GENSCRIPTS} elf32l4300 "$(tdir_elf32l4300)"
-eelf32lm32.c: $(srcdir)/emulparams/elf32lm32.sh \
+eelf32lily2.c: $(srcdir)/emulparams/elf32lily2.sh \
   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
+	${GENSCRIPTS} elf32lily2 "$(tdir_elf32lily2)"
+eelf32lm32.c: $(srcdir)/emulparams/elf32lm32.sh \
+  $(srcdir)/emultempl/elf32.em $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
 	${GENSCRIPTS} elf32lm32 "$(tdir_elf32lm32)"
 eelf32lm32fd.c: $(srcdir)/emulparams/elf32lm32fd.sh \
   $(srcdir)/emulparams/elf32lm32.sh $(ELF_DEPS) \

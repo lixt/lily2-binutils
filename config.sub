@@ -769,6 +769,10 @@ case $basic_machine in
 		basic_machine=m68k-isi
 		os=-sysv
 		;;
+	lily2)
+		basic_machine=lily2-thu
+		os=-linux
+		;;
 	m68knommu)
 		basic_machine=m68k-unknown
 		os=-linux

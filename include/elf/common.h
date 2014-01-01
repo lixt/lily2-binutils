@@ -410,6 +410,9 @@
 
 /* See the above comment before you add a new EM_* value here.  */
 
+/* LILY2. */
+#define EM_LILY2    0xCAFE
+
 /* Values for e_version.  */
 
 #define EV_NONE		0		/* Invalid ELF version */

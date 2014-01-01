@@ -634,6 +634,7 @@ extern const bfd_target bfd_elf32_ia64_big_vec;
 extern const bfd_target bfd_elf32_ia64_hpux_big_vec;
 extern const bfd_target bfd_elf32_ip2k_vec;
 extern const bfd_target bfd_elf32_iq2000_vec;
+extern const bfd_target bfd_elf32_lily2_big_vec;
 extern const bfd_target bfd_elf32_lm32_vec;
 extern const bfd_target bfd_elf32_lm32fdpic_vec;
 extern const bfd_target bfd_elf32_little_generic_vec;
@@ -1022,6 +1023,7 @@ static const bfd_target * const _bfd_target_vector[] =
 #endif
 	&bfd_elf32_ip2k_vec,
 	&bfd_elf32_iq2000_vec,
+    &bfd_elf32_lily2_big_vec,
 	&bfd_elf32_lm32_vec,
 	&bfd_elf32_little_generic_vec,
 	&bfd_elf32_littlearc_vec,

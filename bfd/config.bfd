@@ -6,12 +6,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; see the file COPYING3.  If not see
 # <http://www.gnu.org/licenses/>.
@@ -102,6 +102,7 @@ fido*)		 targ_archs=bfd_m68k_arch ;;
 hppa*)		 targ_archs=bfd_hppa_arch ;;
 i[3-7]86)	 targ_archs=bfd_i386_arch ;;
 i370)		 targ_archs=bfd_i370_arch ;;
+lily2*)		 targ_archs=bfd_lily2_arch ;;
 lm32)	         targ_archs=bfd_lm32_arch ;;
 m6811*|m68hc11*) targ_archs="bfd_m68hc11_arch bfd_m68hc12_arch bfd_m9s12x_arch bfd_m9s12xg_arch" ;;
 m6812*|m68hc12*) targ_archs="bfd_m68hc12_arch bfd_m68hc11_arch bfd_m9s12x_arch bfd_m9s12xg_arch" ;;
@@ -782,6 +783,10 @@ case "${targ}" in
 
   iq2000-*-elf)
     targ_defvec=bfd_elf32_iq2000_vec
+    ;;
+
+  lily2-*-*)
+    targ_defvec=bfd_elf32_lily2_big_vec
     ;;
 
   lm32-*-elf | lm32-*-rtems*)
@@ -1640,12 +1645,12 @@ case "${targ}" in
   w65-*-*)
     targ_defvec=w65_vec
     ;;
-    
+
   xgate-*-*)
     targ_defvec=bfd_elf32_xgate_vec
     targ_selvecs="bfd_elf32_xgate_vec"
     ;;
- 	
+
   xstormy16-*-elf)
     targ_defvec=bfd_elf32_xstormy16_vec
     ;;

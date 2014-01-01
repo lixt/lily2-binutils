@@ -49,6 +49,7 @@
 #define ARCH_ia64
 #define ARCH_ip2k
 #define ARCH_iq2000
+#define ARCH_lily2
 #define ARCH_lm32
 #define ARCH_m32c
 #define ARCH_m32r
@@ -244,6 +245,14 @@ disassembler (abfd)
 #ifdef ARCH_fr30
     case bfd_arch_fr30:
       disassemble = print_insn_fr30;
+      break;
+#endif
+#ifdef ARCH_lily2
+    case bfd_arch_lily2:
+      if (bfd_big_endian (abfd))
+	disassemble = print_insn_big_lily2;
+      else
+	disassemble = print_insn_little_lily2;
       break;
 #endif
 #ifdef ARCH_lm32

@@ -554,6 +554,7 @@ extern const bfd_arch_info_type bfd_ip2k_arch;
 extern const bfd_arch_info_type bfd_iq2000_arch;
 extern const bfd_arch_info_type bfd_k1om_arch;
 extern const bfd_arch_info_type bfd_l1om_arch;
+extern const bfd_arch_info_type bfd_lily2_arch;
 extern const bfd_arch_info_type bfd_lm32_arch;
 extern const bfd_arch_info_type bfd_m32c_arch;
 extern const bfd_arch_info_type bfd_m32r_arch;
@@ -643,6 +644,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
     &bfd_iq2000_arch,
     &bfd_k1om_arch,
     &bfd_l1om_arch,
+    &bfd_lily2_arch,
     &bfd_lm32_arch,
     &bfd_m32c_arch,
     &bfd_m32r_arch,

@@ -227,6 +227,7 @@ ALL_EMULATION_SOURCES = \
 	eelf32i370.c \
 	eelf32ip2k.c \
 	eelf32iq10.c \
+	eelf32lily2.c \
 	eelf32iq2000.c \
 	eelf32lm32.c \
 	eelf32lm32fd.c \
@@ -1088,8 +1089,11 @@ eelf32l4300.c: $(srcdir)/emulparams/elf32l4300.sh \
   $(ELF_DEPS) $(srcdir)/emultempl/mipself.em $(srcdir)/scripttempl/elf.sc \
   ${GEN_DEPENDS}
 	${GENSCRIPTS} elf32l4300 "$(tdir_elf32l4300)"
-eelf32lm32.c: $(srcdir)/emulparams/elf32lm32.sh \
+eelf32lily2.c: $(srcdir)/emulparams/elf32lily2.sh \
   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
+	${GENSCRIPTS} elf32lily2 "$(tdir_elf32lily2)"
+eelf32lm32.c: $(srcdir)/emulparams/elf32lm32.sh \
+  $(srcdir)/emultempl/elf32.em $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
 	${GENSCRIPTS} elf32lm32 "$(tdir_elf32lm32)"
 eelf32lm32fd.c: $(srcdir)/emulparams/elf32lm32fd.sh \
   $(srcdir)/emulparams/elf32lm32.sh $(ELF_DEPS) \
