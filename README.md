@@ -1,7 +1,8 @@
 lily2-binutils
 ==============
 
-This is the binutils for LILY2. LILY2 is a DSP core developed by Tsinghua University DSP Laboratory.
+This is the binutils for LILY2.
+LILY2 is a DSP core developed by DSP Group, Institute of Microeletronics, Tsinghua University.
 
 To configure the compilation and installation, run the ``configure'' script in the root directory:
 
