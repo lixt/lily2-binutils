@@ -1,5 +1,5 @@
 /* Table of opcodes for the LILY2 ISA.
-   Copyright(C) DSP Group, Institute of Microeletronics, Tsinghua University
+   Copyright(C) 2014 DSP Group, Institute of Microelectronics, Tsinghua University
    All rights reserved.
 
    Contributed by Xiaotian Li <lixiaotian07@gmail.com>.

@@ -1,5 +1,5 @@
 /* Assembly backend for the LILY2.
-   Copyright (C) DSP Group, Institute of Microelectronics, Tsinghua University
+   Copyright (C) 2014 DSP Group, Institute of Microelectronics, Tsinghua University
    All rights reserved.
 
    Contributed by Xiaotian Li <lixiaotian07@gmail.com>.

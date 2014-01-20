@@ -1,5 +1,5 @@
 /* Instruction printing code for the LILY2
-   Copyright (C) Free Software Foundation, Inc.
+   Copyright (C) 2014 DSP Group, Institute of Microelectronics, Tsinghua University.
    Contributed by Xiaotian Li <lixiaotian07@gmail.com>.
 
    This file is part of the GNU opcodes library.
