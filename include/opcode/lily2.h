@@ -1,8 +1,8 @@
 /* Table of opcodes for the LILY2 ISA.
-   Copyright(C) Free Software Foundation, Inc.
-   Contributed by Xiaotian Li <lixiaotian07@gmail.com>.
+   Copyright(C) DSP Group, Institute of Microeletronics, Tsinghua University
+   All rights reserved.
 
-   This file is part of or1k_gen_isa, or1ksim, GDB and GAS.
+   Contributed by Xiaotian Li <lixiaotian07@gmail.com>.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -25,157 +25,205 @@
 #ifndef LILY2_H_ISA
 #define LILY2_H_ISA
 
-#define NUM_UNSIGNED (0)
 #define NUM_SIGNED (1)
+#define NUM_UNSIGNED (0)
 
-#define MAX_GPRS 32
-#define PAGE_SIZE 4096
-#undef __HALF_WORD_INSN__
+#define BASE_2  (2)
+#define BASE_8  (8)
+#define BASE_10 (10)
+#define BASE_16 (16)
 
-#define OPERAND_DELIM (',')
+#define ADDR_MOD (1)
 
-#define LILY2_IF_DELAY (1)
-#define LILY2_W_FLAG   (2)
-#define LILY2_R_FLAG   (4)
-
+/* Attributes of encoding letters. */
 struct lily2_letter
 {
-  char letter;
-  int  sign;
-  /* int  reloc; relocation per letter ??  */
+    char ch;
+    int len;
+    int sign;
 };
 
-/* Main instruction specification array.  */
 struct lily2_opcode
 {
-  /* Name of the instruction.  */
-  char *name;
+    const char *name;
 
-  /* A string of characters which describe the operands.
-     Valid characters are:
-     ,() Itself.  Characters appears in the assembly code.
-     rA	 Register operand.
-     rB  Register operand.
-     rD  Register operand.
-     I	 An immediate operand, range -32768 to 32767.
-     J	 An immediate operand, range . (unused)
-     K	 An immediate operand, range 0 to 65535.
-     L	 An immediate operand, range 0 to 63.
-     M	 An immediate operand, range . (unused)
-     N	 An immediate operand, range -33554432 to 33554431.
-     O	 An immediate operand, range . (unused).  */
-  char *args;
+    /* A string of characters describing the operands of instructions.
+       Valid characters are:
+       rA   Register operand.
+       rB   Register operand.
+       rD   Register operand.
+       dA   Register-Pair operand.
+       dB   Register-Pair operand.
+       dD   Register-Pair operand.
+       qA   Register-Pair-Pair operand.
+       qB   Register-Pair-Pair operand.
+       qD   Register-Pair-Pair operand.
+       rC   Miscellaneous register operand.
+       rX   Cross register operand.
+       dX   Cross register-pair operand.
+       qX   Cross register-pair-pair operand.
+       iG   An immediate operand, range 0 to 1.
+       iH   An immediate operand, range 0 to 3.
+       iI   An immediate operand, range -128 to 127.
+       iJ   An immediate operand, range 0 to 255.
+       iK   An immediate operand, range -16 to 15.
+       iL   An immediate operand, range 0 to 31.
+       iM   An immediate operand, range 0 to 65535.
+       iN   An immediate operand, range -1048576 to 1048575.
+       *    Address modification prefix operator.
+       #    Address modification suffix operator.
+       */
+    char *args;
 
-  /* Opcode and operand encoding.  */
-  char *encoding;
-  void (*exec) (void);
-  unsigned int flags;
+    /* A string of characters describing the encoding of instructions.
+       Valid characters are:
+       A   Register/Register-Pair/Register-Pair-Pair operand.
+       B   Register/Register-pair/Register-pair-Pair operand.
+       D   Register/Register-pair/Register-pair-Pair operand.
+       C   Miscellaneous register operand.
+       X   Across register/register-pair/register-pair-pair operand.
+       G   An immediate operand, range 0 to 1.
+       H   An immediate operand, range 0 to 3.
+       I   An immediate operand, range -128 to 127.
+       J   An immediate operand, range 0 to 255.
+       K   An immediate operand, range -16 to 15.
+       L   An immediate operand, range 0 to 31.
+       M   An immediate operand, range 0 to 65535.
+       N   An immediate operand, range -1048576 to 1048575.
+       S   Address modification prefix or suffix operator(S stands for *).
+       E   Cluster bitfield(used in gas).
+       F   Functional unit bitfield(used in dis).
+       Z   Condition bitfield.
+       0   Bit 0.
+       1   Bit 1.
+       -   Reserved bit. */
+    char *encoding;
+
+    unsigned int flag;
 };
 
-#define OPTYPE_LAST (0x80000000)
-#define OPTYPE_OP   (0x40000000)
-#define OPTYPE_REG  (0x20000000)
-#define OPTYPE_SIG  (0x10000000)
-#define OPTYPE_DIS  (0x08000000)
-#define OPTYPE_DST  (0x04000000)
-#define OPTYPE_SBIT (0x00001F00)
-#define OPTYPE_SHR  (0x0000001F)
-#define OPTYPE_SBIT_SHR (8)
-
-/* MM: Data how to decode operands.  */
-extern struct insn_op_struct
+/* lily2 cluster. */
+struct lily2_cluster
 {
-  unsigned long type;
-  unsigned long data;
-} **op_start;
+    const char *name;
+    unsigned long code;
+};
 
-#ifdef HAS_EXECUTION
-extern void l_invalid (void);
-extern void l_sfne    (void);
-extern void l_bf      (void);
-extern void l_add     (void);
-extern void l_sw      (void);
-extern void l_sb      (void);
-extern void l_sh      (void);
-extern void l_lwz     (void);
-extern void l_lbs     (void);
-extern void l_lbz     (void);
-extern void l_lhs     (void);
-extern void l_lhz     (void);
-extern void l_movhi   (void);
-extern void l_and     (void);
-extern void l_or      (void);
-extern void l_xor     (void);
-extern void l_sub     (void);
-extern void l_mul     (void);
-extern void l_div     (void);
-extern void l_divu    (void);
-extern void l_sll     (void);
-extern void l_sra     (void);
-extern void l_srl     (void);
-extern void l_j       (void);
-extern void l_jal     (void);
-extern void l_jalr    (void);
-extern void l_jr      (void);
-extern void l_rfe     (void);
-extern void l_nop     (void);
-extern void l_bnf     (void);
-extern void l_sfeq    (void);
-extern void l_sfgts   (void);
-extern void l_sfges   (void);
-extern void l_sflts   (void);
-extern void l_sfles   (void);
-extern void l_sfgtu   (void);
-extern void l_sfgeu   (void);
-extern void l_sfltu   (void);
-extern void l_sfleu   (void);
-extern void l_mtspr   (void);
-extern void l_mfspr   (void);
-extern void l_sys     (void);
-extern void l_trap    (void); /* CZ 21/06/01.  */
-extern void l_macrc   (void);
-extern void l_mac     (void);
-extern void l_msb     (void);
-extern void l_invalid (void);
-extern void l_cust1   (void);
-extern void l_cust2   (void);
-extern void l_cust3   (void);
-extern void l_cust4   (void);
-#endif
-extern void l_none    (void);
+/* lily2 functional unit. */
+struct lily2_functional_unit
+{
+    const char *name;
+    unsigned long code;
 
+    struct lily2_cluster cluster;
+    struct lily2_opcode *opcodes;
+};
+
+/* lily2 condition. */
+struct lily2_condition
+{
+    const char *name;
+    unsigned long code;
+};
+
+/* lily2 register. */
+struct lily2_register
+{
+    const char *name;
+    unsigned long code;
+};
+
+/* lily2 address modification sign. */
+struct lily2_addr_mod_sign
+{
+    const char *name;
+    unsigned long code;
+};
+
+/* All the tables beginning with ``OPC_'' are used in GAS.
+   All the tables beginning with ``DIS_'' are used in DIS.
+   Those without ``OPC_'' or ``DIS_'' are used in both. */
+
+/* Table of LETTER. */
 extern const struct lily2_letter lily2_letters[];
+extern const size_t lily2_num_letters;
 
-extern const struct  lily2_opcode lily2_opcodes[];
+/* Table of OPC_OPCODE.
+   OPC_OPCODES_A for opcode table of functional unit A.
+   OPC_OPCODES_M for opcode table of functional unit M.
+   OPC_OPCODES_D for opcode table of functional unit D. */
+extern const struct lily2_opcode lily2_opc_opcodes_a[];
+extern const size_t lily2_num_opc_opcodes_a;
+extern const struct lily2_opcode lily2_opc_opcodes_m[];
+extern const size_t lily2_num_opc_opcodes_m;
+extern const struct lily2_opcode lily2_opc_opcodes_d[];
+extern const size_t lily2_num_opc_opcodes_d;
 
-extern const unsigned int lily2_num_opcodes;
+/* Table of OPC_FUNCTIONAL_UNIT. */
+extern const struct lily2_functional_unit lily2_opc_functional_units[];
+extern const size_t lily2_num_opc_functional_units;
 
-/* Calculates instruction length in bytes.  Always 4 for lily2.  */
-extern int insn_len (int);
+/* Table of OPC_CONDITION. */
+extern const struct lily2_condition lily2_opc_conditions[];
+extern const size_t lily2_num_opc_conditions;
 
-/* Is individual insn's operand signed or unsigned?  */
-extern int letter_signed (char);
+/* Table of OPC_REGISTER.
+   OPC_REGISTERS_X for general register table of cluster X.
+   OPC_REGISTERS_Y for general register table of cluster Y.
+   OPC_REGISTERS_M for miscellaneous register table.
+   OPC_REGISTERS_C for condition register table. */
+extern const struct lily2_register lily2_opc_registers_x[];
+extern const size_t lily2_num_opc_registers_x;
+extern const struct lily2_register lily2_opc_registers_y[];
+extern const size_t lily2_num_opc_registers_y;
+extern const struct lily2_register lily2_opc_registers_m[];
+extern const size_t lily2_num_opc_registers_m;
+extern const struct lily2_register lily2_opc_registers_c[];
+extern const size_t lily2_num_opc_registers_c;
 
-/* Number of letters in the individual lettered operand.  */
-extern int letter_range (char);
+/* Table of OPC_REGISTER_PAIR.
+   OPC_REGISTER_PAIRS_X for general register-pair of cluster X.
+   OPC_REGISTER_PAIRS_Y for genreal register-pair of cluster Y.*/
+extern const struct lily2_register lily2_opc_register_pairs_x[];
+extern const size_t lily2_num_opc_register_pairs_x;
+extern const struct lily2_register lily2_opc_register_pairs_y[];
+extern const size_t lily2_num_opc_register_pairs_y;
 
-/* MM: Returns index of given instruction name.  */
-extern int insn_index (char *);
+/* Table of OPC_REGISTER_PAIR_PAIR.
+   OPC_REGISTER_PAIR_PAIRS_X for general register-pair-pair of cluster X.
+   OPC_REGISTER_PAIR_PAIRS_Y for general register-pair-pair of cluster Y.*/
+extern const struct lily2_register lily2_opc_register_pair_pairs_x[];
+extern const size_t lily2_num_opc_register_pair_pairs_x;
+extern const struct lily2_register lily2_opc_register_pair_pairs_y[];
+extern const size_t lily2_num_opc_register_pair_pairs_y;
 
-/* MM: Returns instruction name from index.  */
-extern const char *insn_name (int);
+/* Table of OPC_ADDR_MOD_SIGN. */
+extern const struct lily2_addr_mod_sign lily2_opc_addr_mod_signs[];
+extern const size_t lily2_num_opc_addr_mod_signs;
 
-/* MM: Constructs new FSM, based on lily2_opcodes.  */
-extern void build_automata (void);
+/* Letter table isn't put into the hash table and it will be used by
+   both opc and dis. Therefore we list letter_find functions alone
+   for convenience. */
+extern struct lily2_letter *letter_find (char);
 
-/* MM: Destructs FSM.  */
-extern void destruct_automata (void);
+/* Generates a NBITS mask. */
+extern unsigned long mask (int nbits);
 
-/* MM: Decodes instruction using FSM.  Call build_automata first.  */
-extern int insn_decode (unsigned int);
+/* Extracts FIRST to LAST bits of INSN and puts them in the LSBs. */
+extern unsigned long bits (unsigned long insn, int first, int last);
 
-/* Disassemble one instruction from insn to disassemble.
-   Return the size of the instruction.  */
-int disassemble_insn (unsigned long);
+/* Replaces FIRST to LAST bits of OLD_INSN with NEW_INSN. */
+extern unsigned long
+replace_bits (unsigned long old_insn, int first, int last, unsigned long new_insn);
+
+extern unsigned long
+sign_extend (unsigned long insn, int nbits, int sign);
+
+/* Checks whether INSN is overflow according to the NBITS and SIGN.
+   SIGN = 0 represents positive value. Returns 0 if bits (MSB) to (nbits)
+   are all 0s to represents not overflow.
+   SIGN = 1 represents negative value. Returns 0 if bits (MSB) to (nbits)
+   are all 1s to represents not overflow. */
+extern int check_overflow (unsigned long insn, int nbits, int sign);
 
 #endif

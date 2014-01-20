@@ -1,5 +1,7 @@
 /* Table of opcodes for the LILY2 ISA.
-   Copyright(C) Free Software Foundation, Inc.
+   Copyright(C) DSP Group, Institute of Microeletronics, Tsinghua University
+   All rights reserved.
+
    Contributed by Xiaotian Li <lixiaotian07@gmail.com>.
 
    This file is part of the GNU opcodes library.
@@ -25,581 +27,9 @@
 #include <stdlib.h>
 #include "safe-ctype.h"
 #include "ansidecl.h"
+#include "libiberty.h"
 #include "opcode/lily2.h"
 
-/* We treat all letters the same in encode/decode routines so
-   we need to assign some characteristics to them like signess etc.  */
-
-const struct lily2_letter lily2_letters[] =
-{
-  { 'A', NUM_UNSIGNED },
-  { 'B', NUM_UNSIGNED },
-  { 'D', NUM_UNSIGNED },
-  { 'I', NUM_SIGNED },
-  { 'K', NUM_UNSIGNED },
-  { 'L', NUM_UNSIGNED },
-  { 'N', NUM_SIGNED },
-  { '0', NUM_UNSIGNED },
-  { '\0', 0 }     /* Dummy entry.  */
-};
-
-/* Opcode encoding:
-   machine[31:30]: first two bits of opcode
-   		   00 - neither of source operands is GPR
-   		   01 - second source operand is GPR (rB)
-   		   10 - first source operand is GPR (rA)
-   		   11 - both source operands are GPRs (rA and rB)
-   machine[29:26]: next four bits of opcode
-   machine[25:00]: instruction operands (specific to individual instruction)
-
-  Recommendation: irrelevant instruction bits should be set with a value of
-  bits in same positions of instruction preceding current instruction in the
-  code (when assembling).  */
-
-#define EFN &l_none
-
-#ifdef HAS_EXECUTION
-#define EF(func) &(func)
-#define EFI &l_invalid
-#else  /* HAS_EXECUTION */
-#define EF(func) EFN
-#define EFI EFN
-#endif /* HAS_EXECUTION */
-
-const struct lily2_opcode lily2_opcodes[] =
-{
-  { "l.j",       "N",            "00 0x0  NNNNN NNNNN NNNN NNNN NNNN NNNN", EF(l_j), LILY2_IF_DELAY },
-  { "l.jal",     "N",            "00 0x1  NNNNN NNNNN NNNN NNNN NNNN NNNN", EF(l_jal), LILY2_IF_DELAY },
-  { "l.bnf",     "N",            "00 0x3  NNNNN NNNNN NNNN NNNN NNNN NNNN", EF(l_bnf), LILY2_IF_DELAY | LILY2_R_FLAG},
-  { "l.bf",      "N",            "00 0x4  NNNNN NNNNN NNNN NNNN NNNN NNNN", EF(l_bf), LILY2_IF_DELAY | LILY2_R_FLAG },
-  { "l.nop",     "K",            "00 0x5  01--- ----- KKKK KKKK KKKK KKKK", EF(l_nop), 0 },
-  { "l.movhi",   "rD,K",         "00 0x6  DDDDD ----0 KKKK KKKK KKKK KKKK", EF(l_movhi), 0 }, /*MM*/
-  { "l.macrc",   "rD",           "00 0x6  DDDDD ----1 0000 0000 0000 0000", EF(l_macrc), 0 }, /*MM*/
-
-  { "l.sys",     "K",            "00 0x8  00000 00000 KKKK KKKK KKKK KKKK", EF(l_sys), 0 },
-  { "l.trap",    "K",            "00 0x8  01000 00000 KKKK KKKK KKKK KKKK", EF(l_trap), 0 }, /* CZ 21/06/01 */
-  { "l.msync",   "",             "00 0x8  10000 00000 0000 0000 0000 0000", EFN, 0 },
-  { "l.psync",   "",             "00 0x8  10100 00000 0000 0000 0000 0000", EFN, 0 },
-  { "l.csync",   "",             "00 0x8  11000 00000 0000 0000 0000 0000", EFN, 0 },
-  { "l.rfe",     "",             "00 0x9  ----- ----- ---- ---- ---- ----", EF(l_rfe), LILY2_IF_DELAY },
-
-  { "lv.all_eq.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x1 0x0", EFI, 0 },
-  { "lv.all_eq.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x1 0x1", EFI, 0 },
-  { "lv.all_ge.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x1 0x2", EFI, 0 },
-  { "lv.all_ge.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x1 0x3", EFI, 0 },
-  { "lv.all_gt.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x1 0x4", EFI, 0 },
-  { "lv.all_gt.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x1 0x5", EFI, 0 },
-  { "lv.all_le.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x1 0x6", EFI, 0 },
-  { "lv.all_le.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x1 0x7", EFI, 0 },
-  { "lv.all_lt.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x1 0x8", EFI, 0 },
-  { "lv.all_lt.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x1 0x9", EFI, 0 },
-  { "lv.all_ne.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x1 0xA", EFI, 0 },
-  { "lv.all_ne.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x1 0xB", EFI, 0 },
-  { "lv.any_eq.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x2 0x0", EFI, 0 },
-  { "lv.any_eq.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x2 0x1", EFI, 0 },
-  { "lv.any_ge.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x2 0x2", EFI, 0 },
-  { "lv.any_ge.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x2 0x3", EFI, 0 },
-  { "lv.any_gt.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x2 0x4", EFI, 0 },
-  { "lv.any_gt.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x2 0x5", EFI, 0 },
-  { "lv.any_le.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x2 0x6", EFI, 0 },
-  { "lv.any_le.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x2 0x7", EFI, 0 },
-  { "lv.any_lt.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x2 0x8", EFI, 0 },
-  { "lv.any_lt.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x2 0x9", EFI, 0 },
-  { "lv.any_ne.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x2 0xA", EFI, 0 },
-  { "lv.any_ne.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x2 0xB", EFI, 0 },
-  { "lv.add.b",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x3 0x0", EFI, 0 },
-  { "lv.add.h",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x3 0x1", EFI, 0 },
-  { "lv.adds.b", "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x3 0x2", EFI, 0 },
-  { "lv.adds.h", "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x3 0x3", EFI, 0 },
-  { "lv.addu.b", "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x3 0x4", EFI, 0 },
-  { "lv.addu.h", "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x3 0x5", EFI, 0 },
-  { "lv.addus.b","rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x3 0x6", EFI, 0 },
-  { "lv.addus.h","rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x3 0x7", EFI, 0 },
-  { "lv.and",    "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x3 0x8", EFI, 0 },
-  { "lv.avg.b",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x3 0x9", EFI, 0 },
-  { "lv.avg.h",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x3 0xA", EFI, 0 },
-  { "lv.cmp_eq.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x4 0x0", EFI, 0 },
-  { "lv.cmp_eq.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x4 0x1", EFI, 0 },
-  { "lv.cmp_ge.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x4 0x2", EFI, 0 },
-  { "lv.cmp_ge.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x4 0x3", EFI, 0 },
-  { "lv.cmp_gt.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x4 0x4", EFI, 0 },
-  { "lv.cmp_gt.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x4 0x5", EFI, 0 },
-  { "lv.cmp_le.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x4 0x6", EFI, 0 },
-  { "lv.cmp_le.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x4 0x7", EFI, 0 },
-  { "lv.cmp_lt.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x4 0x8", EFI, 0 },
-  { "lv.cmp_lt.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x4 0x9", EFI, 0 },
-  { "lv.cmp_ne.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x4 0xA", EFI, 0 },
-  { "lv.cmp_ne.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x4 0xB", EFI, 0 },
-  { "lv.madds.h","rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x5 0x4", EFI, 0 },
-  { "lv.max.b",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x5 0x5", EFI, 0 },
-  { "lv.max.h",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x5 0x6", EFI, 0 },
-  { "lv.merge.b","rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x5 0x7", EFI, 0 },
-  { "lv.merge.h","rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x5 0x8", EFI, 0 },
-  { "lv.min.b",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x5 0x9", EFI, 0 },
-  { "lv.min.h",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x5 0xA", EFI, 0 },
-  { "lv.msubs.h","rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x5 0xB", EFI, 0 },
-  { "lv.muls.h", "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x5 0xC", EFI, 0 },
-  { "lv.nand",   "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x5 0xD", EFI, 0 },
-  { "lv.nor",    "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x5 0xE", EFI, 0 },
-  { "lv.or",     "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x5 0xF", EFI, 0 },
-  { "lv.pack.b", "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0x0", EFI, 0 },
-  { "lv.pack.h", "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0x1", EFI, 0 },
-  { "lv.packs.b","rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0x2", EFI, 0 },
-  { "lv.packs.h","rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0x3", EFI, 0 },
-  { "lv.packus.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0x4", EFI, 0 },
-  { "lv.packus.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0x5", EFI, 0 },
-  { "lv.perm.n", "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0x6", EFI, 0 },
-  { "lv.rl.b",   "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0x7", EFI, 0 },
-  { "lv.rl.h",   "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0x8", EFI, 0 },
-  { "lv.sll.b",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0x9", EFI, 0 },
-  { "lv.sll.h",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0xA", EFI, 0 },
-  { "lv.sll",    "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0xB", EFI, 0 },
-  { "lv.srl.b",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0xC", EFI, 0 },
-  { "lv.srl.h",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0xD", EFI, 0 },
-  { "lv.sra.b",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0xE", EFI, 0 },
-  { "lv.sra.h",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x6 0xF", EFI, 0 },
-  { "lv.srl",    "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x7 0x0", EFI, 0 },
-  { "lv.sub.b",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x7 0x1", EFI, 0 },
-  { "lv.sub.h",  "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x7 0x2", EFI, 0 },
-  { "lv.subs.b", "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x7 0x3", EFI, 0 },
-  { "lv.subs.h", "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x7 0x4", EFI, 0 },
-  { "lv.subu.b", "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x7 0x5", EFI, 0 },
-  { "lv.subu.h", "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x7 0x6", EFI, 0 },
-  { "lv.subus.b","rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x7 0x7", EFI, 0 },
-  { "lv.subus.h","rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x7 0x8", EFI, 0 },
-  { "lv.unpack.b","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x7 0x9", EFI, 0 },
-  { "lv.unpack.h","rD,rA,rB",    "00 0xA  DDDDD AAAAA BBBB B--- 0x7 0xA", EFI, 0 },
-  { "lv.xor",    "rD,rA,rB",     "00 0xA  DDDDD AAAAA BBBB B--- 0x7 0xB", EFI, 0 },
-  { "lv.cust1",  "",	       "00 0xA  ----- ----- ---- ---- 0xC ----", EFI, 0 },
-  { "lv.cust2",  "",	       "00 0xA  ----- ----- ---- ---- 0xD ----", EFI, 0 },
-  { "lv.cust3",  "",	       "00 0xA  ----- ----- ---- ---- 0xE ----", EFI, 0 },
-  { "lv.cust4",  "",	       "00 0xA  ----- ----- ---- ---- 0xF ----", EFI, 0 },
-
-  { "lf.add.s",   "rD,rA,rB",    "00 0xB  DDDDD AAAAA BBBB B--- 0x1 0x0", EFI, 0 },
-  { "lf.sub.s",   "rD,rA,rB",    "00 0xB  DDDDD AAAAA BBBB B--- 0x1 0x1", EFI, 0 },
-  { "lf.mul.s",   "rD,rA,rB",    "00 0xB  DDDDD AAAAA BBBB B--- 0x1 0x2", EFI, 0 },
-  { "lf.div.s",   "rD,rA,rB",    "00 0xB  DDDDD AAAAA BBBB B--- 0x1 0x3", EFI, 0 },
-  { "lf.itof.s",  "rD,rA",       "00 0xB  DDDDD AAAAA BBBB B--- 0x1 0x4", EFI, 0 },
-  { "lf.ftoi.s",  "rD,rA",       "00 0xB  DDDDD AAAAA BBBB B--- 0x1 0x5", EFI, 0 },
-  { "lf.rem.s",   "rD,rA,rB",    "00 0xB  DDDDD AAAAA BBBB B--- 0x1 0x6", EFI, 0 },
-  { "lf.madd.s",  "rD,rA,rB",    "00 0xB  DDDDD AAAAA BBBB B--- 0x1 0x7", EFI, 0 },
-  { "lf.sfeq.s",  "rA,rB",       "00 0xB  ----- AAAAA BBBB B--- 0x1 0x8", EFI, 0 },
-  { "lf.sfne.s",  "rA,rB",       "00 0xB  ----- AAAAA BBBB B--- 0x1 0x9", EFI, 0 },
-  { "lf.sfgt.s",  "rA,rB",       "00 0xB  ----- AAAAA BBBB B--- 0x1 0xA", EFI, 0 },
-  { "lf.sfge.s",  "rA,rB",       "00 0xB  ----- AAAAA BBBB B--- 0x1 0xB", EFI, 0 },
-  { "lf.sflt.s",  "rA,rB",       "00 0xB  ----- AAAAA BBBB B--- 0x1 0xC", EFI, 0 },
-  { "lf.sfle.s",  "rA,rB",       "00 0xB  ----- AAAAA BBBB B--- 0x1 0xD", EFI, 0 },
-  { "lf.cust1.s", "",	       "00 0xB  ----- ----- ---- ---- 0xE ----", EFI, 0 },
-
-  { "lf.add.d",   "rD,rA,rB",    "00 0xC  DDDDD AAAAA BBBB B--- 0x1 0x0", EFI, 0 },
-  { "lf.sub.d",   "rD,rA,rB",    "00 0xC  DDDDD AAAAA BBBB B--- 0x1 0x1", EFI, 0 },
-  { "lf.mul.d",   "rD,rA,rB",    "00 0xC  DDDDD AAAAA BBBB B--- 0x1 0x2", EFI, 0 },
-  { "lf.div.d",   "rD,rA,rB",    "00 0xC  DDDDD AAAAA BBBB B--- 0x1 0x3", EFI, 0 },
-  { "lf.itof.d",  "rD,rA",       "00 0xC  DDDDD AAAAA BBBB B--- 0x1 0x4", EFI, 0 },
-  { "lf.ftoi.d",  "rD,rA",       "00 0xC  DDDDD AAAAA BBBB B--- 0x1 0x5", EFI, 0 },
-  { "lf.rem.d",   "rD,rA,rB",    "00 0xC  DDDDD AAAAA BBBB B--- 0x1 0x6", EFI, 0 },
-  { "lf.madd.d",  "rD,rA,rB",    "00 0xC  DDDDD AAAAA BBBB B--- 0x1 0x7", EFI, 0 },
-  { "lf.sfeq.d",  "rA,rB",       "00 0xC  ----- AAAAA BBBB B--- 0x1 0x8", EFI, 0 },
-  { "lf.sfne.d",  "rA,rB",       "00 0xC  ----- AAAAA BBBB B--- 0x1 0x9", EFI, 0 },
-  { "lf.sfgt.d",  "rA,rB",       "00 0xC  ----- AAAAA BBBB B--- 0x1 0xA", EFI, 0 },
-  { "lf.sfge.d",  "rA,rB",       "00 0xC  ----- AAAAA BBBB B--- 0x1 0xB", EFI, 0 },
-  { "lf.sflt.d",  "rA,rB",       "00 0xC  ----- AAAAA BBBB B--- 0x1 0xC", EFI, 0 },
-  { "lf.sfle.d",  "rA,rB",       "00 0xC  ----- AAAAA BBBB B--- 0x1 0xD", EFI, 0 },
-  { "lf.cust1.d", "",	       "00 0xC  ----- ----- ---- ---- 0xE ----", EFI, 0 },
-
-  { "lvf.ld",     "rD,0(rA)",    "00 0xD  DDDDD AAAAA ---- ---- 0x0 0x0", EFI, 0 },
-  { "lvf.lw",     "rD,0(rA)",    "00 0xD  DDDDD AAAAA ---- ---- 0x0 0x1", EFI, 0 },
-  { "lvf.sd",     "0(rA),rB",    "00 0xD  ----- AAAAA BBBB B--- 0x1 0x0", EFI, 0 },
-  { "lvf.sw",     "0(rA),rB",    "00 0xD  ----- AAAAA BBBB B--- 0x1 0x1", EFI, 0 },
-
-  { "l.jr",      "rB",           "01 0x1  ----- ----- BBBB B--- ---- ----", EF(l_jr), LILY2_IF_DELAY },
-  { "l.jalr",    "rB",           "01 0x2  ----- ----- BBBB B--- ---- ----", EF(l_jalr), LILY2_IF_DELAY },
-  { "l.maci",    "rB,I",         "01 0x3  IIIII ----- BBBB BIII IIII IIII", EF(l_mac), 0 },
-  { "l.cust1",   "",	       "01 0xC  ----- ----- ---- ---- ---- ----", EF(l_cust1), 0 },
-  { "l.cust2",   "",	       "01 0xD  ----- ----- ---- ---- ---- ----", EF(l_cust2), 0 },
-  { "l.cust3",   "",	       "01 0xE  ----- ----- ---- ---- ---- ----", EF(l_cust3), 0 },
-  { "l.cust4",   "",	       "01 0xF  ----- ----- ---- ---- ---- ----", EF(l_cust4), 0 },
-
-  { "l.ld",      "rD,I(rA)",     "10 0x0  DDDDD AAAAA IIII IIII IIII IIII", EFI, 0 },
-  { "l.lwz",     "rD,I(rA)",     "10 0x1  DDDDD AAAAA IIII IIII IIII IIII", EF(l_lwz), 0 },
-  { "l.lws",     "rD,I(rA)",     "10 0x2  DDDDD AAAAA IIII IIII IIII IIII", EFI, 0 },
-  { "l.lbz",     "rD,I(rA)",     "10 0x3  DDDDD AAAAA IIII IIII IIII IIII", EF(l_lbz), 0 },
-  { "l.lbs",     "rD,I(rA)",     "10 0x4  DDDDD AAAAA IIII IIII IIII IIII", EF(l_lbs), 0 },
-  { "l.lhz",     "rD,I(rA)",     "10 0x5  DDDDD AAAAA IIII IIII IIII IIII", EF(l_lhz), 0 },
-  { "l.lhs",     "rD,I(rA)",     "10 0x6  DDDDD AAAAA IIII IIII IIII IIII", EF(l_lhs), 0 },
-
-  { "l.addi",    "rD,rA,I",      "10 0x7  DDDDD AAAAA IIII IIII IIII IIII", EF(l_add), 0 },
-  { "l.addic",   "rD,rA,I",      "10 0x8  DDDDD AAAAA IIII IIII IIII IIII", EFI, 0 },
-  { "l.andi",    "rD,rA,K",      "10 0x9  DDDDD AAAAA KKKK KKKK KKKK KKKK", EF(l_and), 0 },
-  { "l.ori",     "rD,rA,K",      "10 0xA  DDDDD AAAAA KKKK KKKK KKKK KKKK", EF(l_or), 0  },
-  { "l.xori",    "rD,rA,I",      "10 0xB  DDDDD AAAAA IIII IIII IIII IIII", EF(l_xor), 0 },
-  { "l.muli",    "rD,rA,I",      "10 0xC  DDDDD AAAAA IIII IIII IIII IIII", EFI, 0 },
-  { "l.mfspr",   "rD,rA,K",      "10 0xD  DDDDD AAAAA KKKK KKKK KKKK KKKK", EF(l_mfspr), 0 },
-  { "l.slli",    "rD,rA,L",      "10 0xE  DDDDD AAAAA ---- ---- 00LL LLLL", EF(l_sll), 0 },
-  { "l.srli",    "rD,rA,L",      "10 0xE  DDDDD AAAAA ---- ---- 01LL LLLL", EF(l_srl), 0 },
-  { "l.srai",    "rD,rA,L",      "10 0xE  DDDDD AAAAA ---- ---- 10LL LLLL", EF(l_sra), 0 },
-  { "l.rori",    "rD,rA,L",      "10 0xE  DDDDD AAAAA ---- ---- 11LL LLLL", EFI, 0 },
-
-  { "l.sfeqi",   "rA,I",         "10 0xF  00000 AAAAA IIII IIII IIII IIII", EF(l_sfeq), LILY2_W_FLAG },
-  { "l.sfnei",   "rA,I",         "10 0xF  00001 AAAAA IIII IIII IIII IIII", EF(l_sfne), LILY2_W_FLAG },
-  { "l.sfgtui",  "rA,I",         "10 0xF  00010 AAAAA IIII IIII IIII IIII", EF(l_sfgtu), LILY2_W_FLAG },
-  { "l.sfgeui",  "rA,I",         "10 0xF  00011 AAAAA IIII IIII IIII IIII", EF(l_sfgeu), LILY2_W_FLAG },
-  { "l.sfltui",  "rA,I",         "10 0xF  00100 AAAAA IIII IIII IIII IIII", EF(l_sfltu), LILY2_W_FLAG },
-  { "l.sfleui",  "rA,I",         "10 0xF  00101 AAAAA IIII IIII IIII IIII", EF(l_sfleu), LILY2_W_FLAG },
-  { "l.sfgtsi",  "rA,I",         "10 0xF  01010 AAAAA IIII IIII IIII IIII", EF(l_sfgts), LILY2_W_FLAG },
-  { "l.sfgesi",  "rA,I",         "10 0xF  01011 AAAAA IIII IIII IIII IIII", EF(l_sfges), LILY2_W_FLAG },
-  { "l.sfltsi",  "rA,I",         "10 0xF  01100 AAAAA IIII IIII IIII IIII", EF(l_sflts), LILY2_W_FLAG },
-  { "l.sflesi",  "rA,I",         "10 0xF  01101 AAAAA IIII IIII IIII IIII", EF(l_sfles), LILY2_W_FLAG },
-
-  { "l.mtspr",   "rA,rB,K",      "11 0x0  KKKKK AAAAA BBBB BKKK KKKK KKKK", EF(l_mtspr), 0 },
-  { "l.mac",     "rA,rB",        "11 0x1  ----- AAAAA BBBB B--- ---- 0x1", EF(l_mac), 0 }, /*MM*/
-  { "l.msb",     "rA,rB",        "11 0x1  ----- AAAAA BBBB B--- ---- 0x2", EF(l_msb), 0 }, /*MM*/
-
-  { "l.sd",      "I(rA),rB",     "11 0x4  IIIII AAAAA BBBB BIII IIII IIII", EFI, 0 },
-  { "l.sw",      "I(rA),rB",     "11 0x5  IIIII AAAAA BBBB BIII IIII IIII", EF(l_sw), 0 },
-  { "l.sb",      "I(rA),rB",     "11 0x6  IIIII AAAAA BBBB BIII IIII IIII", EF(l_sb), 0 },
-  { "l.sh",      "I(rA),rB",     "11 0x7  IIIII AAAAA BBBB BIII IIII IIII", EF(l_sh), 0 },
-
-  { "l.add",     "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 ---- 0x0", EF(l_add), 0 },
-  { "l.addc",    "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 ---- 0x1", EFI, 0 },
-  { "l.sub",     "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 ---- 0x2", EF(l_sub), 0 },
-  { "l.and",     "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 ---- 0x3", EF(l_and), 0 },
-  { "l.or",      "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 ---- 0x4", EF(l_or), 0 },
-  { "l.xor",     "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 ---- 0x5", EF(l_xor), 0 },
-  { "l.mul",     "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-11 ---- 0x6", EF(l_mul), 0 },
-
-  { "l.sll",     "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 00-- 0x8", EF(l_sll), 0 },
-  { "l.srl",     "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 01-- 0x8", EF(l_srl), 0 },
-  { "l.sra",     "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 10-- 0x8", EF(l_sra), 0 },
-  { "l.ror",     "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 11-- 0x8", EFI, 0 },
-  { "l.div",     "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 ---- 0x9", EF(l_div), 0 },
-  { "l.divu",    "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 ---- 0xA", EF(l_divu), 0 },
-  { "l.mulu",    "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-11 ---- 0xB", EFI, 0 },
-  { "l.exths",   "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 00-- 0xC", EFI, 0 },
-  { "l.extbs",   "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 01-- 0xC", EFI, 0 },
-  { "l.exthz",   "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 10-- 0xC", EFI, 0 },
-  { "l.extbz",   "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 11-- 0xC", EFI, 0 },
-  { "l.extws",   "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 00-- 0xD", EFI, 0 },
-  { "l.extwz",   "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 01-- 0xD", EFI, 0 },
-  { "l.cmov",    "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 ---- 0xE", EFI, 0 },
-  { "l.ff1",     "rD,rA,rB",     "11 0x8  DDDDD AAAAA BBBB B-00 ---- 0xF", EFI, 0 },
-
-  { "l.sfeq",    "rA,rB",        "11 0x9  00000 AAAAA BBBB B--- ---- ----", EF(l_sfeq), LILY2_W_FLAG },
-  { "l.sfne",    "rA,rB",        "11 0x9  00001 AAAAA BBBB B--- ---- ----", EF(l_sfne), LILY2_W_FLAG },
-  { "l.sfgtu",   "rA,rB",        "11 0x9  00010 AAAAA BBBB B--- ---- ----", EF(l_sfgtu), LILY2_W_FLAG },
-  { "l.sfgeu",   "rA,rB",        "11 0x9  00011 AAAAA BBBB B--- ---- ----", EF(l_sfgeu), LILY2_W_FLAG },
-  { "l.sfltu",   "rA,rB",        "11 0x9  00100 AAAAA BBBB B--- ---- ----", EF(l_sfltu), LILY2_W_FLAG },
-  { "l.sfleu",   "rA,rB",        "11 0x9  00101 AAAAA BBBB B--- ---- ----", EF(l_sfleu), LILY2_W_FLAG },
-  { "l.sfgts",   "rA,rB",        "11 0x9  01010 AAAAA BBBB B--- ---- ----", EF(l_sfgts), LILY2_W_FLAG },
-  { "l.sfges",   "rA,rB",        "11 0x9  01011 AAAAA BBBB B--- ---- ----", EF(l_sfges), LILY2_W_FLAG },
-  { "l.sflts",   "rA,rB",        "11 0x9  01100 AAAAA BBBB B--- ---- ----", EF(l_sflts), LILY2_W_FLAG },
-  { "l.sfles",   "rA,rB",        "11 0x9  01101 AAAAA BBBB B--- ---- ----", EF(l_sfles), LILY2_W_FLAG },
-
-  { "l.cust5",   "",	       "11 0xC  ----- ----- ---- ---- ---- ----", EFI, 0 },
-  { "l.cust6",   "",	       "11 0xD  ----- ----- ---- ---- ---- ----", EFI, 0 },
-  { "l.cust7",   "",	       "11 0xE  ----- ----- ---- ---- ---- ----", EFI, 0 },
-  { "l.cust8",   "",	       "11 0xF  ----- ----- ---- ---- ---- ----", EFI, 0 },
-
-  /* This section should not be defined in or1ksim, since it contains duplicates,
-     which would cause machine builder to complain.  */
-#ifdef HAS_CUST
-  { "l.cust5_1",   "rD",	       "11 0xC  DDDDD ----- ---- ---- ---- ----", EFI, 0 },
-  { "l.cust5_2",   "rD,rA"   ,   "11 0xC  DDDDD AAAAA ---- ---- ---- ----", EFI, 0 },
-  { "l.cust5_3",   "rD,rA,rB",   "11 0xC  DDDDD AAAAA BBBB B--- ---- ----", EFI, 0 },
-
-  { "l.cust6_1",   "rD",	       "11 0xD  DDDDD ----- ---- ---- ---- ----", EFI, 0 },
-  { "l.cust6_2",   "rD,rA"   ,   "11 0xD  DDDDD AAAAA ---- ---- ---- ----", EFI, 0 },
-  { "l.cust6_3",   "rD,rA,rB",   "11 0xD  DDDDD AAAAA BBBB B--- ---- ----", EFI, 0 },
-
-  { "l.cust7_1",   "rD",	       "11 0xE  DDDDD ----- ---- ---- ---- ----", EFI, 0 },
-  { "l.cust7_2",   "rD,rA"   ,   "11 0xE  DDDDD AAAAA ---- ---- ---- ----", EFI, 0 },
-  { "l.cust7_3",   "rD,rA,rB",   "11 0xE  DDDDD AAAAA BBBB B--- ---- ----", EFI, 0 },
-
-  { "l.cust8_1",   "rD",	       "11 0xF  DDDDD ----- ---- ---- ---- ----", EFI, 0 },
-  { "l.cust8_2",   "rD,rA"   ,   "11 0xF  DDDDD AAAAA ---- ---- ---- ----", EFI, 0 },
-  { "l.cust8_3",   "rD,rA,rB",   "11 0xF  DDDDD AAAAA BBBB B--- ---- ----", EFI, 0 },
-#endif
-
-  /* Dummy entry, not included in num_opcodes.  This
-     lets code examine entry i+1 without checking
-     if we've run off the end of the table.  */
-  { "", "", "", EFI, 0 }
-};
-
-#undef EFI
-#undef EFN
-#undef EF
-
-/* Define dummy, if debug is not defined.  */
-
-#if !defined HAS_DEBUG
-static void ATTRIBUTE_PRINTF_2
-debug (int level ATTRIBUTE_UNUSED, const char *format ATTRIBUTE_UNUSED, ...)
-{
-}
-#endif
-
-const unsigned int lily2_num_opcodes = ((sizeof(lily2_opcodes)) / (sizeof(struct lily2_opcode))) - 1;
-
-/* Calculates instruction length in bytes. Always 4 for lily2.  */
-
-int
-insn_len (int i_index ATTRIBUTE_UNUSED)
-{
-  return 4;
-}
-
-/* Is individual insn's operand signed or unsigned?  */
-
-int
-letter_signed (char l)
-{
-  const struct lily2_letter *pletter;
-
-  for (pletter = lily2_letters; pletter->letter != '\0'; pletter++)
-    if (pletter->letter == l)
-      return pletter->sign;
-
-  printf ("letter_signed(%c): Unknown letter.\n", l);
-  return 0;
-}
-
-/* Number of letters in the individual lettered operand.  */
-
-int
-letter_range (char l)
-{
-  const struct lily2_opcode *pinsn;
-  char *enc;
-  int range = 0;
-
-  for (pinsn = lily2_opcodes; strlen (pinsn->name); pinsn ++)
-    {
-      if (strchr (pinsn->encoding,l))
-	{
-	  for (enc = pinsn->encoding; *enc != '\0'; enc ++)
-	    if ((*enc == '0') && (*(enc + 1) == 'x'))
-	      enc += 2;
-	    else if (*enc == l)
-	      range++;
-	  return range;
-	}
-    }
-
-  printf ("\nABORT: letter_range(%c): Never used letter.\n", l);
-  exit (1);
-}
-
-/* MM: Returns index of given instruction name.  */
-
-int
-insn_index (char *insn)
-{
-  unsigned int i;
-  int found = -1;
-
-  for (i = 0; i < lily2_num_opcodes; i++)
-    if (!strcmp (lily2_opcodes[i].name, insn))
-      {
-	found = i;
-	break;
-      }
-  return found;
-}
-
-const char *
-insn_name (int op_index)
-{
-  if (op_index >= 0 && op_index < (int) lily2_num_opcodes)
-    return lily2_opcodes[op_index].name;
-  else
-    return "???";
-}
-
-void
-l_none (void)
-{
-}
-
-/* Finite automata for instruction decoding building code.  */
-
-/* Find simbols in encoding.  */
-
-static unsigned long
-insn_extract (char param_ch, char *enc_initial)
-{
-  char *enc;
-  unsigned long ret = 0;
-  unsigned opc_pos = 32;
-
-  for (enc = enc_initial; *enc != '\0'; )
-    if ((*enc == '0') && (*(enc + 1) == 'x'))
-      {
-	unsigned long tmp = strtol (enc+2, NULL, 16);
-
-        opc_pos -= 4;
-	if (param_ch == '0' || param_ch == '1')
-	  {
-	    if (param_ch == '0')
-	      tmp = 15 - tmp;
-	    ret |= tmp << opc_pos;
-	  }
-        enc += 3;
-      }
-    else
-      {
-	if (*enc == '0' || *enc == '1' || *enc == '-' || ISALPHA (*enc))
-	  {
-	    opc_pos--;
-	    if (param_ch == *enc)
-	      ret |= 1 << opc_pos;
-	  }
-	enc++;
-      }
-  return ret;
-}
-
-#define MAX_AUTOMATA_SIZE  1200
-#define MAX_OP_TABLE_SIZE  1200
-#define LEAF_FLAG          0x80000000
-#define MAX_LEN            8
-
-#ifndef MIN
-#define MIN(x, y)          ((x) < (y) ? (x) : (y))
-#endif
-
-unsigned long *automata;
-int nuncovered;
-int curpass = 0;
-
-/* MM: Struct that hold runtime build information about instructions.  */
-struct temp_insn_struct
-{
-  unsigned long insn;
-  unsigned long insn_mask;
-  int in_pass;
-} *ti;
-
-struct insn_op_struct *op_data, **op_start;
-
-/* Recursive utility function used to find best match and to build automata.  */
-
-static unsigned long *
-cover_insn (unsigned long * cur, int pass, unsigned int mask)
-{
-  int best_first = 0, last_match = -1, ninstr = 0;
-  unsigned int best_len = 0;
-  unsigned int i;
-  unsigned long cur_mask = mask;
-  unsigned long *next;
-
-  for (i = 0; i < lily2_num_opcodes; i++)
-    if (ti[i].in_pass == pass)
-      {
-	cur_mask &= ti[i].insn_mask;
-	ninstr++;
-	last_match = i;
-      }
-
-  debug (8, "%08X %08lX\n", mask, cur_mask);
-
-  if (ninstr == 0)
-    return 0;
-
-  if (ninstr == 1)
-    {
-      /* Leaf holds instruction index.  */
-      debug (8, "%li>I%i %s\n",
-	     (long)(cur - automata), last_match, lily2_opcodes[last_match].name);
-
-      *cur = LEAF_FLAG | last_match;
-      cur++;
-      nuncovered--;
-    }
-  else
-    {
-      /* Find longest match.  */
-      for (i = 0; i < 32; i++)
-	{
-	  unsigned int len;
-
-	  for (len = best_len + 1; len < MIN (MAX_LEN, 33 - i); len++)
-	    {
-	      unsigned long m = (1UL << ((unsigned long) len)) - 1;
-
-	      debug (9, " (%i(%08lX & %08lX>>%i = %08lX, %08lX)",
-		     len,m, cur_mask, i, (cur_mask >> (unsigned)i),
-		     (cur_mask >> (unsigned) i) & m);
-
-	      if ((m & (cur_mask >> (unsigned) i)) == m)
-		{
-		  best_len = len;
-		  best_first = i;
-		  debug (9, "!");
-		}
-	      else
-		break;
-	    }
-	}
-
-      debug (9, "\n");
-
-      if (!best_len)
-	{
-	  fprintf (stderr, "%i instructions match mask 0x%08X:\n", ninstr, mask);
-
-	  for (i = 0; i < lily2_num_opcodes; i++)
-	    if (ti[i].in_pass == pass)
-	      fprintf (stderr, "%s ", lily2_opcodes[i].name);
-
-	  fprintf (stderr, "\n");
-	  exit (1);
-	}
-
-      debug (8, "%li> #### %i << %i (%i) ####\n",
-	     (long)(cur - automata), best_len, best_first, ninstr);
-
-      *cur = best_first;
-      cur++;
-      *cur = (1 << best_len) - 1;
-      cur++;
-      next = cur;
-
-      /* Allocate space for pointers.  */
-      cur += 1 << best_len;
-      cur_mask = (1 << (unsigned long) best_len) - 1;
-
-      for (i = 0; i < ((unsigned) 1 << best_len); i++)
-	{
-	  unsigned int j;
-	  unsigned long *c;
-
-	  curpass++;
-	  for (j = 0; j < lily2_num_opcodes; j++)
-	    if (ti[j].in_pass == pass
-		&& ((ti[j].insn >> best_first) & cur_mask) == (unsigned long) i
-		&& ((ti[j].insn_mask >> best_first) & cur_mask) == cur_mask)
-	      ti[j].in_pass = curpass;
-
-	  debug (9, "%08X %08lX %i\n", mask, cur_mask, best_first);
-	  c = cover_insn (cur, curpass, mask & (~(cur_mask << best_first)));
-	  if (c)
-	    {
-	      debug (8, "%li> #%X -> %lu\n", (long)(next - automata), i,
-		     (unsigned long)(cur - automata));
-	      *next = cur - automata;
-	      cur = c;
-	    }
-	  else
-	    {
-	      debug (8, "%li> N/A\n", (long)(next - automata));
-	      *next = 0;
-	    }
-	  next++;
-	}
-    }
-  return cur;
-}
 
 /* Returns number of nonzero bits.  */
 
@@ -617,414 +47,372 @@ num_ones (unsigned long value)
   return c;
 }
 
-/* Utility function, which converts parameters from lily2_opcode
-   format to more binary form.  Parameters are stored in ti struct.  */
+const struct lily2_letter lily2_letters[] = {
+    {'A', 5 , NUM_UNSIGNED},
+    {'B', 5 , NUM_UNSIGNED},
+    {'D', 5 , NUM_UNSIGNED},
+    {'X', 5 , NUM_UNSIGNED},
+    {'C', 2 , NUM_UNSIGNED},
+    {'H', 2 , NUM_UNSIGNED},
+    {'I', 8 , NUM_SIGNED  },
+    {'J', 8 , NUM_UNSIGNED},
+    {'K', 5 , NUM_SIGNED  },
+    {'L', 5 , NUM_UNSIGNED},
+    {'M', 16, NUM_SIGNED  },
+    {'N', 22, NUM_SIGNED  },
+    {'S', 2 , NUM_UNSIGNED},
+    {'E', 1 , NUM_UNSIGNED},
+    {'F', 2 , NUM_UNSIGNED},
+    {'Z', 3 , NUM_UNSIGNED},
+};
+const size_t lily2_num_letters = ARRAY_SIZE (lily2_letters);
 
-static struct insn_op_struct *
-parse_params (const struct lily2_opcode * opcode,
-	      struct insn_op_struct * cur)
+const struct lily2_opcode lily2_opc_opcodes_a[] =
 {
-  char *args = opcode->args;
-  int i, type;
+    {"add", "rD,rA,rB", "E 00 000 000 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"adc", "rD,rA,rB", "E 00 000 001 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sub", "rD,rA,rB", "E 00 000 010 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sbc", "rD,rA,rB", "E 00 000 011 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsb", "rD,rA,rB", "E 00 000 100 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsc", "rD,rA,rB", "E 00 000 101 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"abs", "rD,rA"   , "E 00 000 111 - 0 ---00000 AAAAA DDDDD ZZZ", 0},
+    {"neg", "rD,rA"   , "E 00 000 111 - 0 ---00001 AAAAA DDDDD ZZZ", 0},
+    {"sxb", "rD,rA"   , "E 00 000 111 - 0 ---00010 AAAAA DDDDD ZZZ", 0},
+    {"zxb", "rD,rA"   , "E 00 000 111 - 0 ---00011 AAAAA DDDDD ZZZ", 0},
+    {"sxh", "rD,rA"   , "E 00 000 111 - 0 ---00100 AAAAA DDDDD ZZZ", 0},
+    {"zxh", "rD,rA"   , "E 00 000 111 - 0 ---00101 AAAAA DDDDD ZZZ", 0},
 
-  i = 0;
-  type = 0;
-  /* In case we don't have any parameters, we add dummy read from r0.  */
+    {"add.i", "rD,rA,iI", "E 00 000 000 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"adc.i", "rD,rA,iI", "E 00 000 001 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"sub.i", "rD,rA,iI", "E 00 000 010 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"sbc.i", "rD,rA,iI", "E 00 000 011 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"rsb.i", "rD,rA,iI", "E 00 000 100 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"rsc.i", "rD,rA,iI", "E 00 000 101 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
 
-  if (!(*args))
-    {
-      cur->type = OPTYPE_REG | OPTYPE_OP | OPTYPE_LAST;
-      cur->data = 0;
-      debug (9, "#%08lX %08lX\n", cur->type, cur->data);
-      cur++;
-      return cur;
-  }
+    {"add.sp", "rD,rA,rB", "E 01 000 000 -- 00- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sub.sp", "rD,rA,rB", "E 01 000 010 -- 00- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsb.sp", "rD,rA,rB", "E 01 000 100 -- 00- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"abs.sp", "rD,rA,rB", "E 01 000 111 -- 00- 00000 AAAAA DDDDD ZZZ", 0},
+    {"neg.sp", "rD,rA,rB", "E 01 000 111 -- 00- 00001 AAAAA DDDDD ZZZ", 0},
 
-  while (*args != '\0')
-    {
-      if (*args == 'r')
-	{
-	  args++;
-	  type |= OPTYPE_REG;
-	}
-      else if (ISALPHA (*args))
-	{
-	  unsigned long arg;
+    {"add.sp.2", "dD,dA,dB", "E 01 000 000 -- 01- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sub.sp.2", "dD,dA,dB", "E 01 000 010 -- 01- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsb.sp.2", "dD,dA,dB", "E 01 000 100 -- 01- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"abs.sp.2", "dD,dA,dB", "E 01 000 111 -- 01- 00000 AAAAA DDDDD ZZZ", 0},
+    {"neg.sp.2", "dD,dA,dB", "E 01 000 111 -- 01- 00001 AAAAA DDDDD ZZZ", 0},
 
-	  arg = insn_extract (*args, opcode->encoding);
-	  debug (9, "%s : %08lX ------\n", opcode->name, arg);
-	  if (letter_signed (*args))
-	    {
-	      type |= OPTYPE_SIG;
-	      type |= ((num_ones (arg) - 1) << OPTYPE_SBIT_SHR) & OPTYPE_SBIT;
-	    }
+    {"add.dp", "dD,dA,dB", "E 01 000 000 -- 10- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sub.dp", "dD,dA,dB", "E 01 000 010 -- 10- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsb.dp", "dD,dA,dB", "E 01 000 100 -- 10- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"abs.dp", "dD,dA,dB", "E 01 000 111 -- 10- 00000 AAAAA DDDDD ZZZ", 0},
+    {"neg.dp", "dD,dA,dB", "E 01 000 111 -- 10- 00001 AAAAA DDDDD ZZZ", 0},
+};
+const size_t lily2_num_opc_opcodes_a = ARRAY_SIZE (lily2_opc_opcodes_a);
 
-	  /* Split argument to sequences of consecutive ones.  */
-	  while (arg)
-	    {
-	      int shr = 0;
-	      unsigned long tmp = arg, mask = 0;
+const struct lily2_opcode lily2_opc_opcodes_m[] =
+{
+    {"mul", "rD,rA,rB", "E 10 000 000 1 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nmu", "rD,rA,rB", "E 10 000 001 1 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"mac", "rD,rA,rB", "E 10 000 010 1 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nma", "rD,rA,rB", "E 10 000 011 1 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"msu", "rD,rA,rB", "E 10 000 100 1 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nms", "rD,rA,rB", "E 10 000 101 1 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"div", "rD,rA,rB", "E 10 000 110 1 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rem", "rD,rA,rB", "E 10 000 111 1 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
 
-	      while ((tmp & 1) == 0)
-		{
-		  shr++;
-		  tmp >>= 1;
-		}
-	      while (tmp & 1)
-		{
-		  mask++;
-		  tmp >>= 1;
-		}
-	      cur->type = type | shr;
-	      cur->data = mask;
-	      arg &= ~(((1 << mask) - 1) << shr);
-	      debug (6, "|%08lX %08lX\n", cur->type, cur->data);
-	      cur++;
-	    }
-	  args++;
-	}
-      else if (*args == '(')
-	{
-	  /* Next param is displacement.
-	     Later we will treat them as one operand.  */
-	  cur--;
-	  cur->type = type | cur->type | OPTYPE_DIS | OPTYPE_OP;
-	  debug (9, ">%08lX %08lX\n", cur->type, cur->data);
-	  cur++;
-	  type = 0;
-	  i++;
-	  args++;
-	}
-      else if (*args == OPERAND_DELIM)
-	{
-	  cur--;
-	  cur->type = type | cur->type | OPTYPE_OP;
-	  debug (9, ">%08lX %08lX\n", cur->type, cur->data);
-	  cur++;
-	  type = 0;
-	  i++;
-	  args++;
-	}
-      else if (*args == '0')
-	{
-	  cur->type = type;
-	  cur->data = 0;
-	  debug (9, ">%08lX %08lX\n", cur->type, cur->data);
-	  cur++;
-	  type = 0;
-	  i++;
-	  args++;
-	}
-      else if (*args == ')')
-	args++;
-      else
-	{
-	  fprintf (stderr, "%s : parse error in args.\n", opcode->name);
-	  exit (1);
-	}
+    {"mul.u", "rD,rA,rB", "E 10 000 000 0 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nmu.u", "rD,rA,rB", "E 10 000 001 0 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"mac.u", "rD,rA,rB", "E 10 000 010 0 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nma.u", "rD,rA,rB", "E 10 000 011 0 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"msu.u", "rD,rA,rB", "E 10 000 100 0 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nms.u", "rD,rA,rB", "E 10 000 101 0 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"div.u", "rD,rA,rB", "E 10 000 110 0 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rem.u", "rD,rA,rB", "E 10 000 111 0 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+
+    {"mul.i", "rD,rA,iI", "E 10 000 000 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"nmu.i", "rD,rA,iI", "E 10 000 001 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"mac.i", "rD,rA,iI", "E 10 000 010 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"nma.i", "rD,rA,iI", "E 10 000 011 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"msu.i", "rD,rA,iI", "E 10 000 100 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"nms.i", "rD,rA,iI", "E 10 000 101 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"div.i", "rD,rA,iI", "E 10 000 110 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"rem.i", "rD,rA,iI", "E 10 000 111 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"mul.u.i", "rD,rA,iJ", "E 10 000 000 0 1 JJJJJJJJ AAAAA DDDDD ZZZ", 0},
+    {"nmu.u.i", "rD,rA,iJ", "E 10 000 001 0 1 JJJJJJJJ AAAAA DDDDD ZZZ", 0},
+    {"mac.u.i", "rD,rA,iJ", "E 10 000 010 0 1 JJJJJJJJ AAAAA DDDDD ZZZ", 0},
+    {"nma.u.i", "rD,rA,iJ", "E 10 000 011 0 1 JJJJJJJJ AAAAA DDDDD ZZZ", 0},
+    {"msu.u.i", "rD,rA,iJ", "E 10 000 100 0 1 JJJJJJJJ AAAAA DDDDD ZZZ", 0},
+    {"nms.u.i", "rD,rA,iJ", "E 10 000 101 0 1 JJJJJJJJ AAAAA DDDDD ZZZ", 0},
+    {"div.u.i", "rD,rA,iJ", "E 10 000 110 0 1 JJJJJJJJ AAAAA DDDDD ZZZ", 0},
+    {"rem.u.i", "rD,rA,iJ", "E 10 000 111 0 1 JJJJJJJJ AAAAA DDDDD ZZZ", 0},
+
+};
+const size_t lily2_num_opc_opcodes_m = ARRAY_SIZE (lily2_opc_opcodes_m);
+
+const struct lily2_opcode lily2_opc_opcodes_d[] =
+{
+    {"ldb", "rD,rB(rA)", "E 11 000 000 1 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldh", "rD,rB(rA)", "E 11 000 001 1 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldw", "rD,rB(rA)", "E 11 000 010 - 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldd", "dD,rB(rA)", "E 11 000 011 - 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"stb", "rB(rA),rD", "E 11 000 100 - 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sth", "rB(rA),rD", "E 11 000 101 - 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"stw", "rB(rA),rD", "E 11 000 110 - 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"std", "rB(rA),dD", "E 11 000 111 - 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+
+    {"ldb.u", "rD,rB(rA)", "E 11 000 000 0 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldh.u", "rD,rB(rA)", "E 11 000 001 0 0 --- BBBBB AAAAA DDDDD ZZZ", 0},
+
+    {"ldb.i", "rD,iI(rA)", "E 11 000 000 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"ldh.i", "rD,iI(rA)", "E 11 000 001 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"ldw.i", "rD,iI(rA)", "E 11 000 010 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"ldd.i", "dD,iI(rA)", "E 11 000 011 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"stb.i", "iI(rA),rD", "E 11 000 100 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"sth.i", "iI(rA),rD", "E 11 000 101 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"stw.i", "iI(rA),rD", "E 11 000 110 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"std.i", "iI(rA),dD", "E 11 000 111 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"ldb.u.i", "rD,iI(rA)", "E 11 000 000 0 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"ldh.u.i", "rD,iI(rA)", "E 11 000 001 0 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"lbm", "rD,rB(*rA#)", "E 11 000 000 1 0 GG - BBBBB AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"lhm", "rD,rB(*rA#)", "E 11 000 001 1 0 GG - BBBBB AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"lwm", "rD,rB(*rA#)", "E 11 000 010 - 0 GG - BBBBB AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"ldm", "dD,rB(*rA#)", "E 11 000 011 - 0 GG - BBBBB AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"sbm", "rB(*rA#),rD", "E 11 000 100 - 0 GG - BBBBB AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"shm", "rB(*rA#),rD", "E 11 000 101 - 0 GG - BBBBB AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"swm", "rB(*rA#),rD", "E 11 000 110 - 0 GG - BBBBB AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"sdm", "rB(*rA#),dD", "E 11 000 111 - 0 GG - BBBBB AAAAA DDDDD ZZZ", ADDR_MOD},
+
+    {"lbm.u", "rD,rB(*rA#)", "E 11 000 000 0 0 GG - BBBBB AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"lhm.u", "rD,rB(*rA#)", "E 11 000 001 0 0 GG - BBBBB AAAAA DDDDD ZZZ", ADDR_MOD},
+
+    {"lbm.i", "rD,iK(*rA#)", "E 11 000 000 1 1 GG - KKKKK AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"lhm.i", "rD,iK(*rA#)", "E 11 000 001 1 1 GG - KKKKK AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"lwm.i", "rD,iK(*rA#)", "E 11 000 010 - 1 GG - KKKKK AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"ldm.i", "dD,iK(*rA#)", "E 11 000 011 - 1 GG - KKKKK AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"sbm.i", "iK(*rA#),rD", "E 11 000 100 - 1 GG - KKKKK AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"shm.i", "iK(*rA#),rD", "E 11 000 101 - 1 GG - KKKKK AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"swm.i", "iK(*rA#),rD", "E 11 000 110 - 1 GG - KKKKK AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"sdm.i", "iK(*rA#),dD", "E 11 000 111 - 1 GG - KKKKK AAAAA DDDDD ZZZ", ADDR_MOD},
+
+    {"lbm.u.i", "rD,iK(*rA#)", "E 11 000 000 0 1 GG - KKKKK AAAAA DDDDD ZZZ", ADDR_MOD},
+    {"lhm.u.i", "rD,iK(*rA#)", "E 11 000 001 0 1 GG - KKKKK AAAAA DDDDD ZZZ", ADDR_MOD},
+
+    {"brr", "rA", "E 11 010 000 -- 0------- AAAAA ----- ZZZ", 0},
+    {"brl", "rA", "E 11 010 001 -- 0------- AAAAA ----- ZZZ", 0},
+    {"ret", ""  , "E 11 010 010 -- 0------- ----- ----- ZZZ", 0},
+    {"irt", ""  , "E 11 010 011 -- 0------- ----- ----- ZZZ", 0},
+    {"sys", "iJ", "E 11 010 100 -- JJJJJJJJ ----- ----- ZZZ", 0},
+    {"nop", ""  , "E 11 010 111 -- ---00000 ----- ----- ZZZ", 0},
+    {"smr", ""  , "E 11 010 111 -- ---00001 ----- ----- ZZZ", 0},
+    {"smv", ""  , "E 11 010 111 -- ---00010 ----- ----- ZZZ", 0},
+};
+const size_t lily2_num_opc_opcodes_d = ARRAY_SIZE (lily2_opc_opcodes_d);
+
+/* Here, functional unit shall be encoded in the opcode table.
+   This table is just to get the cluster and the pointer to the specified
+   opcode table. */
+const struct lily2_functional_unit lily2_opc_functional_units[] =
+{
+    {"[xa]", 0x0, {"x", 0x0}, lily2_opc_opcodes_a},
+    {"[xm]", 0x0, {"x", 0x0}, lily2_opc_opcodes_m},
+    {"[xd]", 0x0, {"x", 0x0}, lily2_opc_opcodes_d},
+    {"[ya]", 0x0, {"y", 0x1}, lily2_opc_opcodes_a},
+    {"[ym]", 0x0, {"y", 0x1}, lily2_opc_opcodes_m},
+    {"[yd]", 0x0, {"y", 0x1}, lily2_opc_opcodes_d},
+};
+const size_t lily2_num_opc_functional_units = ARRAY_SIZE (lily2_opc_functional_units);
+
+const struct lily2_condition lily2_opc_conditions[] =
+{
+    {"\0"       , 0x0},
+    {"{cf0}"    , 0x1},
+    {"{cf1}"    , 0x2},
+    {"{cf2}"    , 0x3},
+    {"{!cf0}"   , 0x4},
+    {"{!cf1}"   , 0x5},
+    {"{!cf2}"   , 0x6},
+};
+const size_t lily2_num_opc_conditions = ARRAY_SIZE (lily2_opc_conditions);
+
+const struct lily2_register lily2_opc_registers_x[] =
+{
+    {"x0" , 0 }, {"x1",  1 }, {"x2" , 2 }, {"x3" , 3 },
+    {"x4" , 4 }, {"x5",  5 }, {"x6" , 6 }, {"x7" , 7 },
+    {"x8" , 8 }, {"x9",  9 }, {"x10", 10}, {"x11", 11},
+    {"x12", 12}, {"x13", 13}, {"x14", 14}, {"x15", 15},
+    {"x16", 16}, {"x17", 17}, {"x18", 18}, {"x19", 19},
+    {"x20", 20}, {"x21", 21}, {"x22", 22}, {"x23", 23},
+    {"x24", 24}, {"x25", 25}, {"x26", 26}, {"x27", 27},
+    {"x28", 28}, {"x29", 29}, {"x30", 30}, {"x31", 31},
+
+    {"y24", 24}, {"y25", 25}, {"y26", 26}, {"y27", 27},
+    {"y28", 28}, {"y29", 29}, {"y30", 30}, {"y31", 31},
+
+
+    {"g0" , 24}, {"g1" , 25}, {"g2" , 26}, {"g3" , 27},
+    {"g4" , 28}, {"g5" , 29}, {"g6" , 30}, {"g7" , 31},
+};
+const size_t lily2_num_opc_registers_x = ARRAY_SIZE (lily2_opc_registers_x);
+
+const struct lily2_register lily2_opc_registers_y[] =
+{
+    {"y0" , 0 }, {"y1",  1 }, {"y2" , 2 }, {"y3" , 3 },
+    {"y4" , 4 }, {"y5",  5 }, {"y6" , 6 }, {"y7" , 7 },
+    {"y8" , 8 }, {"y9",  9 }, {"y10", 10}, {"y11", 11},
+    {"y12", 12}, {"y13", 13}, {"y14", 14}, {"y15", 15},
+    {"y16", 16}, {"y17", 17}, {"y18", 18}, {"y19", 19},
+    {"y20", 20}, {"y21", 21}, {"y22", 22}, {"y23", 23},
+    {"y24", 24}, {"y25", 25}, {"y26", 26}, {"y27", 27},
+    {"y28", 28}, {"y29", 29}, {"y30", 30}, {"y31", 31},
+
+    {"x24", 24}, {"x25", 25}, {"x26", 26}, {"x27", 27},
+    {"x28", 28}, {"x29", 29}, {"x30", 30}, {"x31", 31},
+
+    {"g0" , 24}, {"g1" , 25}, {"g2" , 26}, {"g3" , 27},
+    {"g4" , 28}, {"g5" , 29}, {"g6" , 30}, {"g7" , 31},
+};
+const size_t lily2_num_opc_registers_y = ARRAY_SIZE (lily2_opc_registers_y);
+
+const struct lily2_register lily2_opc_register_pairs_x[] =
+{
+    {"x1:x0"  ,  0}, {"x3:x2"  , 2 },
+    {"x5:x4"  ,  4}, {"x7:x6"  , 6 },
+    {"x9:x8"  ,  8}, {"x11:x10", 10},
+    {"x13:x12", 12}, {"x15:x14", 14},
+    {"x17:x16", 16}, {"x19:x18", 18},
+    {"x21:x20", 20}, {"x23:x22", 22},
+    {"x25:x24", 24}, {"x27:x26", 26},
+    {"x29:x28", 28}, {"x31:x30", 30},
+
+    {"y25:y24", 24}, {"y27:y26", 26},
+    {"y29:y28", 28}, {"y31:y30", 30},
+
+    {"g1:g0"  , 24}, {"g3:g2"  , 26},
+    {"g5:g4"  , 28}, {"g7:g6"  , 30},
+};
+const size_t lily2_num_opc_register_pairs_x = ARRAY_SIZE (lily2_opc_register_pairs_x);
+
+const struct lily2_register lily2_opc_register_pairs_y[] =
+{
+    {"y1:y0"  ,  0}, {"y3:y2"  , 2 },
+    {"y5:y4"  ,  4}, {"y7:y6"  , 6 },
+    {"y9:y8"  ,  8}, {"y11:y10", 10},
+    {"y13:y12", 12}, {"y15:y14", 14},
+    {"y17:y16", 16}, {"y19:y18", 18},
+    {"y21:y20", 20}, {"y23:y22", 22},
+    {"y25:y24", 24}, {"y27:y26", 26},
+    {"y29:y28", 28}, {"y31:y30", 30},
+
+    {"x25:x24", 24}, {"x27:x26", 26},
+    {"x29:x28", 28}, {"x31:x30", 30},
+
+    {"g1:g0"  , 24}, {"g3:g2"  , 26},
+    {"g5:g4"  , 28}, {"g7:g6"  , 30},
+};
+const size_t lily2_num_opc_register_pairs_y = ARRAY_SIZE (lily2_opc_register_pairs_y);
+
+const struct lily2_register lily2_opc_register_pair_pairs_x[] =
+{
+    {"x3:x2:x1:x0"    , 0 }, {"x7:x6:x5:x4"    , 4 },
+    {"x11:x10:x9:x8"  , 8 }, {"x15:x14:x13:x12", 12},
+    {"x19:x18:x17:x16", 16}, {"x23:x22:x21:x20", 20},
+    {"x27:x26:x25:x24", 24}, {"x31:x30:x29:x28", 28},
+
+    {"y27:y26:y25:y24", 24}, {"y31:y30:y29:y28", 28},
+
+    {"g3:g2:g1:g0"    , 24}, {"g7:g6:g5:g4"    , 28},
+};
+const size_t lily2_num_opc_register_pair_pairs_x = ARRAY_SIZE (lily2_opc_register_pair_pairs_x);
+
+const struct lily2_register lily2_opc_register_pair_pairs_y[] =
+{
+    {"y3:y2:y1:y0"    , 0 }, {"y7:y6:y5:y4"    , 4 },
+    {"y11:y10:y9:y8"  , 8 }, {"y15:y14:y13:y12", 12},
+    {"y19:y18:y17:y16", 16}, {"y23:y22:y21:y20", 20},
+    {"y27:y26:y25:y24", 24}, {"y31:y30:y29:y28", 28},
+
+    {"x27:x26:x25:x24", 24}, {"x31:x30:x29:x28", 28},
+
+    {"g3:g2:g1:g0"    , 24}, {"g7:g6:g5:g4"    , 28},
+};
+const size_t lily2_num_opc_register_pair_pairs_y = ARRAY_SIZE (lily2_opc_register_pair_pairs_y);
+
+const struct lily2_register lily2_opc_registers_m[] =
+{
+    {"m0" , 0 }, {"m1",  1 }, {"m2" , 2 }, {"m3" , 3 },
+    {"m4" , 4 }, {"m5",  5 }, {"m6" , 6 }, {"m7" , 7 },
+    {"m8" , 8 }, {"m9",  9 }, {"m10", 10}, {"m11", 11},
+    {"m12", 12}, {"m13", 13}, {"m14", 14}, {"m15", 15},
+    {"m16", 16}, {"m17", 17}, {"m18", 18}, {"m19", 19},
+    {"m20", 20}, {"m21", 21}, {"m22", 22}, {"m23", 23},
+    {"m24", 24}, {"m25", 25}, {"m26", 26}, {"m27", 27},
+    {"m28", 28}, {"m29", 29}, {"m30", 30}, {"m31", 31},
+};
+const size_t lily2_num_opc_registers_m = ARRAY_SIZE (lily2_opc_registers_m);
+
+const struct lily2_register lily2_opc_registers_c[] =
+{
+    {"cf0", 0 }, {"cf1", 1 }, {"cf2", 2 },
+};
+const size_t lily2_num_opc_registers_c = ARRAY_SIZE (lily2_opc_registers_c);
+
+const struct lily2_addr_mod_sign lily2_opc_addr_mod_signs[] =
+{
+    {"(+", 0x0}, {"(-", 0x1}, {"+)", 0x2}, {"-)", 0x3},
+};
+const size_t lily2_num_opc_addr_mod_signs = ARRAY_SIZE (lily2_opc_addr_mod_signs);
+
+struct lily2_letter *letter_find (char param_ch)
+{
+    int i;
+    for (i = 0; i != lily2_num_letters; ++i) {
+        if (lily2_letters[i].ch == param_ch)
+            return &lily2_letters[i];
     }
 
-  cur--;
-  cur->type = type | cur->type | OPTYPE_OP | OPTYPE_LAST;
-  debug (9, "#%08lX %08lX\n", cur->type, cur->data);
-  cur++;
-
-  return cur;
+    return NULL;
 }
 
-/* Constructs new automata based on lily2_opcodes array.  */
-
-void
-build_automata (void)
+unsigned long mask (int nbits)
 {
-  unsigned int i;
-  unsigned long *end;
-  struct insn_op_struct *cur;
-
-  automata = malloc (MAX_AUTOMATA_SIZE * sizeof (unsigned long));
-  ti = malloc (sizeof (struct temp_insn_struct) * lily2_num_opcodes);
-
-  nuncovered = lily2_num_opcodes;
-  printf ("Building automata... ");
-  /* Build temporary information about instructions.  */
-  for (i = 0; i < lily2_num_opcodes; i++)
-    {
-      unsigned long ones, zeros;
-      char *encoding = lily2_opcodes[i].encoding;
-
-      ones  = insn_extract('1', encoding);
-      zeros = insn_extract('0', encoding);
-
-      ti[i].insn_mask = ones | zeros;
-      ti[i].insn = ones;
-      ti[i].in_pass = curpass = 0;
-
-      /*debug(9, "%s: %s %08X %08X\n", lily2_opcodes[i].name,
-	lily2_opcodes[i].encoding, ti[i].insn_mask, ti[i].insn);*/
-    }
-
-  /* Until all are covered search for best criteria to separate them.  */
-  end = cover_insn (automata, curpass, 0xFFFFFFFF);
-
-  if (end - automata > MAX_AUTOMATA_SIZE)
-    {
-      fprintf (stderr, "Automata too large. Increase MAX_AUTOMATA_SIZE.");
-      exit (1);
-    }
-
-  printf ("done, num uncovered: %i/%i.\n", nuncovered, lily2_num_opcodes);
-  printf ("Parsing operands data... ");
-
-  op_data = malloc (MAX_OP_TABLE_SIZE * sizeof (struct insn_op_struct));
-  op_start = malloc (lily2_num_opcodes * sizeof (struct insn_op_struct *));
-  cur = op_data;
-
-  for (i = 0; i < lily2_num_opcodes; i++)
-    {
-      op_start[i] = cur;
-      cur = parse_params (&lily2_opcodes[i], cur);
-
-      if (cur - op_data > MAX_OP_TABLE_SIZE)
-	{
-	  fprintf (stderr, "Operands table too small, increase MAX_OP_TABLE_SIZE.\n");
-	  exit (1);
-	}
-    }
-  printf ("done.\n");
+    int insn_bits = sizeof (unsigned long) * 8;
+    return (nbits == insn_bits) ? (unsigned long) -1 : (1 << nbits) - 1;
 }
 
-void
-destruct_automata (void)
+unsigned long bits (unsigned long insn, int first, int last)
 {
-  free (ti);
-  free (automata);
-  free (op_data);
-  free (op_start);
+    int nbits = first - last + 1;
+    return (insn >> last) & mask (nbits);
 }
 
-/* Decodes instruction and returns instruction index.  */
-
-int
-insn_decode (unsigned int insn)
+unsigned long replace_bits (unsigned long old_insn, int first, int last, unsigned long new_insn)
 {
-  unsigned long *a = automata;
-  int i;
-
-  while (!(*a & LEAF_FLAG))
-    {
-      unsigned int first = *a;
-
-      debug (9, "%li ", (long)(a - automata));
-
-      a++;
-      i = (insn >> first) & *a;
-      a++;
-      if (!*(a + i))
-	{
-	  /* Invalid instruction found?  */
-	  debug (9, "XXX\n");
-	  return -1;
-	}
-      a = automata + *(a + i);
-    }
-
-  i = *a & ~LEAF_FLAG;
-
-  debug (9, "%i\n", i);
-
-  /* Final check - do we have direct match?
-     (based on lily2_opcodes this should be the only possibility,
-     but in case of invalid/missing instruction we must perform a check)  */
-  if ((ti[i].insn_mask & insn) == ti[i].insn)
-    return i;
-  else
-    return -1;
+    unsigned long bmask = mask (first - last + 1) << last;
+    return ((new_insn << last) & bmask) | (old_insn & ~bmask);
 }
 
-static char disassembled_str[50];
-char *disassembled = &disassembled_str[0];
-
-/* Automagically does zero- or sign- extension and also finds correct
-   sign bit position if sign extension is correct extension. Which extension
-   is proper is figured out from letter description.  */
-
-static unsigned long
-extend_imm (unsigned long imm, char l)
+unsigned long sign_extend (unsigned long insn, int nbits, int sign)
 {
-  unsigned long mask;
-  int letter_bits;
-
-  /* First truncate all bits above valid range for this letter
-     in case it is zero extend.  */
-  letter_bits = letter_range (l);
-  mask = (1 << letter_bits) - 1;
-  imm &= mask;
-
-  /* Do sign extend if this is the right one.  */
-  if (letter_signed(l) && (imm >> (letter_bits - 1)))
-    imm |= (~mask);
-
-  return imm;
-}
-
-static unsigned long
-lily2_extract (char param_ch, char *enc_initial, unsigned long insn)
-{
-  char *enc;
-  unsigned long ret = 0;
-  int opc_pos = 0;
-  int param_pos = 0;
-
-  for (enc = enc_initial; *enc != '\0'; enc++)
-    if (*enc == param_ch)
-      {
-        if (enc - 2 >= enc_initial && (*(enc - 2) == '0') && (*(enc - 1) == 'x'))
-      	  continue;
-        else
-          param_pos++;
-      }
-
-#if DEBUG
-  printf ("lily2_extract: %x ", param_pos);
-#endif
-  opc_pos = 32;
-
-  for (enc = enc_initial; *enc != '\0'; )
-    if ((*enc == '0') && (*(enc + 1) == 'x'))
-      {
-        opc_pos -= 4;
-        if ((param_ch == '0') || (param_ch == '1'))
-          {
-            unsigned long tmp = strtol (enc, NULL, 16);
-#if DEBUG
-            printf (" enc=%s, tmp=%lx ", enc, tmp);
-#endif
-            if (param_ch == '0')
-              tmp = 15 - tmp;
-            ret |= tmp << opc_pos;
-          }
-        enc += 3;
-      }
-    else if ((*enc == '0') || (*enc == '1'))
-      {
-        opc_pos--;
-        if (param_ch == *enc)
-          ret |= 1 << opc_pos;
-        enc++;
-      }
-    else if (*enc == param_ch)
-      {
-        opc_pos--;
-        param_pos--;
-#if DEBUG
-        printf ("\n  ret=%lx opc_pos=%x, param_pos=%x\n", ret, opc_pos, param_pos);
-#endif
-        if (ISLOWER (param_ch))
-          ret -= ((insn >> opc_pos) & 0x1) << param_pos;
-        else
-          ret += ((insn >> opc_pos) & 0x1) << param_pos;
-        enc++;
-      }
-    else if (ISALPHA (*enc))
-      {
-        opc_pos--;
-        enc++;
-      }
-    else if (*enc == '-')
-      {
-        opc_pos--;
-        enc++;
-      }
-    else
-      enc++;
-
-#if DEBUG
-  printf ("ret=%lx\n", ret);
-#endif
-  return ret;
-}
-
-/* Print register. Used only by print_insn.  */
-
-static void
-lily2_print_register (char param_ch, char *encoding, unsigned long insn)
-{
-  int regnum = lily2_extract(param_ch, encoding, insn);
-  char s_regnum[20];
-
-  sprintf (s_regnum, "r%d", regnum);
-  strcat (disassembled, s_regnum);
-}
-
-/* Print immediate. Used only by print_insn.  */
-
-static void
-lily2_print_immediate (char param_ch, char *encoding, unsigned long insn)
-{
-  int imm = lily2_extract (param_ch, encoding, insn);
-  char s_imm[20];
-
-  imm = extend_imm (imm, param_ch);
-
-  if (letter_signed (param_ch))
-    {
-      if (imm < 0)
-	sprintf (s_imm, "%d", imm);
-      else
-	sprintf (s_imm, "0x%x", imm);
-    }
-  else
-    sprintf (s_imm, "%#x", imm);
-  strcat (disassembled, s_imm);
-}
-
-/* Disassemble one instruction from insn to disassemble.
-   Return the size of the instruction.  */
-
-int
-disassemble_insn (unsigned long insn)
-{
-  int op_index;
-  op_index = insn_decode (insn);
-
-  if (op_index >= 0)
-    {
-      struct lily2_opcode const *opcode = &lily2_opcodes[op_index];
-      char *s;
-
-      sprintf (disassembled, "%s ", opcode->name);
-      for (s = opcode->args; *s != '\0'; ++s)
-        {
-          switch (*s)
-            {
-            case '\0':
-              return 4;
-
-            case 'r':
-              lily2_print_register (*++s, opcode->encoding, insn);
-              break;
-
-            default:
-              if (strchr (opcode->encoding, *s))
-                lily2_print_immediate (*s, opcode->encoding, insn);
-              else
-		{
-		  char s_encoding[2] = { *s, '\0' };
-
-		  strcat (disassembled, s_encoding);
-		}
-
-            }
+    if (sign) { /* Signed. */
+        if (bits (insn, nbits - 1, nbits - 1)) {
+            return insn | ~mask (nbits);
+        } else {
+            return insn & mask (nbits);
         }
+    } else { /* Unsigned. */
+        return insn & mask (nbits);
     }
-  else
-    {
-      char s_insn[20];
+}
 
-      /* This used to be %8x for binutils.  */
-      sprintf (s_insn, ".word 0x%08lx", insn);
-      strcat (disassembled, s_insn);
+int check_overflow (unsigned long insn, int nbits, int sign)
+{
+    if (sign) { /* Signed. */
+        return !(((long) (insn | mask (nbits - 1)) == -1) ||
+                ((insn & ~mask (nbits - 1)) == 0));
+    } else { /* Unsigned. */
+        return insn & ~mask (nbits);
     }
-
-  return insn_len (insn);
 }

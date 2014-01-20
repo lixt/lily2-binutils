@@ -23,7 +23,8 @@
 
 #define TARGET_BYTES_BIG_ENDIAN 1
 
-#define LEX_DOLLAR 1
+/* LILY2 assembly statement is always start with `['. */
+#define LEX_BR 3
 
 #ifdef OBJ_ELF
 #define TARGET_FORMAT  "elf32-lily2"
