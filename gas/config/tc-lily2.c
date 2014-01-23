@@ -1304,6 +1304,9 @@ md_assemble (char *str)
         as_fatal (_("Broken assembler."));
     }
 
+    char *toP = frag_more (4);
+    md_number_to_chars (toP, the_insn.insn, 4);
+
     return;
 }
 
@@ -1325,7 +1328,13 @@ remove_addr_mod_sign (char *s)
     remove_whitespace (s);
 }
 
-
+static void
+remove_reserved_bit (char *s)
+{
+    for (;*s ;++s) {
+        if (*s == '-') *s = '0';
+    }
+}
 
 /* Instruction parsing.  Takes a string containing the opcode.
    Operands are at input_line_pointer.  Output is in the_insn.
@@ -1443,6 +1452,16 @@ machine_ip (char *str)
             retval = lily2_parse_operand (operand_type[i], param_ch[i],
                 encoding, operand_str[i]);
         }
+    }
+
+    if (retval) {
+        remove_reserved_bit (encoding);
+        printf ("insn str = %s\n", encoding);
+        remove_whitespace (encoding);
+        printf ("insn str = %s\n", encoding);
+        the_insn.insn = strtoul (encoding, NULL, BASE_2);
+        printf ("insn str = %s\n", encoding);
+        printf ("insn = 0x%08x\n", the_insn.insn);
     }
 
     return retval;
