@@ -1,4 +1,4 @@
-This is bfd.info, produced by makeinfo version 4.8 from bfd.texinfo.
+This is bfd.info, produced by makeinfo version 4.13 from bfd.texinfo.
 
 INFO-DIR-SECTION Software development
 START-INFO-DIR-ENTRY
@@ -7760,6 +7760,7 @@ i960 KB, and 68020 and 68030 for Motorola 68020 and 68030.
      #define bfd_mach_r800           11 /* R800: successor with multiplication.  */
        bfd_arch_lm32,      /* Lattice Mico32 */
      #define bfd_mach_lm32      1
+       bfd_arch_lily2,     /* THU LILY2. */
        bfd_arch_microblaze,/* Xilinx MicroBlaze. */
        bfd_arch_tilepro,   /* Tilera TILEPro */
        bfd_arch_tilegx, /* Tilera TILE-Gx */
@@ -8706,9 +8707,9 @@ The linker proper will call the `_bfd_link_add_symbols' entry point for
 each object file or archive which is to be linked (typically these are
 the files named on the command line, but some may also come from the
 linker script).  The entry point is responsible for examining the file.
-For an object file, BFD must add any relevant symbol information to
-the hash table.  For an archive, BFD must determine which elements of
-the archive should be used and adding them to the link.
+For an object file, BFD must add any relevant symbol information to the
+hash table.  For an archive, BFD must determine which elements of the
+archive should be used and adding them to the link.
 
    The a.out version of this entry point is
 `NAME(aout,link_add_symbols)'.
@@ -11038,12 +11039,12 @@ BFD Index
 * bfd_alloc2:                            Opening and Closing.
                                                              (line  227)
 * bfd_alt_mach_code:                     Miscellaneous.      (line  308)
-* bfd_arch_bits_per_address:             Architectures.      (line  584)
-* bfd_arch_bits_per_byte:                Architectures.      (line  576)
-* bfd_arch_default_fill:                 Architectures.      (line  665)
-* bfd_arch_get_compatible:               Architectures.      (line  519)
-* bfd_arch_list:                         Architectures.      (line  510)
-* bfd_arch_mach_octets_per_byte:         Architectures.      (line  653)
+* bfd_arch_bits_per_address:             Architectures.      (line  585)
+* bfd_arch_bits_per_byte:                Architectures.      (line  577)
+* bfd_arch_default_fill:                 Architectures.      (line  666)
+* bfd_arch_get_compatible:               Architectures.      (line  520)
+* bfd_arch_list:                         Architectures.      (line  511)
+* bfd_arch_mach_octets_per_byte:         Architectures.      (line  654)
 * BFD_ARELOC_BFIN_ADD:                   howto manager.      (line 1120)
 * BFD_ARELOC_BFIN_ADDR:                  howto manager.      (line 1171)
 * BFD_ARELOC_BFIN_AND:                   howto manager.      (line 1141)
@@ -11094,11 +11095,11 @@ BFD Index
                                                              (line  363)
 * bfd_decode_symclass:                   symbol handling functions.
                                                              (line  111)
-* bfd_default_arch_struct:               Architectures.      (line  531)
-* bfd_default_compatible:                Architectures.      (line  593)
+* bfd_default_arch_struct:               Architectures.      (line  532)
+* bfd_default_compatible:                Architectures.      (line  594)
 * bfd_default_reloc_type_lookup:         howto manager.      (line 3268)
-* bfd_default_scan:                      Architectures.      (line  602)
-* bfd_default_set_arch_mach:             Architectures.      (line  549)
+* bfd_default_scan:                      Architectures.      (line  603)
+* bfd_default_set_arch_mach:             Architectures.      (line  550)
 * bfd_demangle:                          Miscellaneous.      (line  359)
 * bfd_emul_get_commonpagesize:           Miscellaneous.      (line  339)
 * bfd_emul_get_maxpagesize:              Miscellaneous.      (line  319)
@@ -11130,8 +11131,8 @@ BFD Index
 * bfd_generic_relax_section:             howto manager.      (line 3286)
 * bfd_get_alt_debug_link_info:           Opening and Closing.
                                                              (line  279)
-* bfd_get_arch:                          Architectures.      (line  560)
-* bfd_get_arch_info:                     Architectures.      (line  612)
+* bfd_get_arch:                          Architectures.      (line  561)
+* bfd_get_arch_info:                     Architectures.      (line  613)
 * bfd_get_arch_size:                     Miscellaneous.      (line   63)
 * bfd_get_assert_handler:                Error reporting.    (line  150)
 * bfd_get_debug_link_info:               Opening and Closing.
@@ -11140,7 +11141,7 @@ BFD Index
 * bfd_get_error_handler:                 Error reporting.    (line  118)
 * bfd_get_gp_size:                       Miscellaneous.      (line  104)
 * bfd_get_linker_section:                section prototypes. (line   36)
-* bfd_get_mach:                          Architectures.      (line  568)
+* bfd_get_mach:                          Architectures.      (line  569)
 * bfd_get_mtime:                         Miscellaneous.      (line  410)
 * bfd_get_next_mapent:                   Archives.           (line   58)
 * bfd_get_next_section_by_name:          section prototypes. (line   26)
@@ -11151,8 +11152,8 @@ BFD Index
 * bfd_get_section_by_name_if:            section prototypes. (line   45)
 * bfd_get_section_contents:              section prototypes. (line  251)
 * bfd_get_sign_extend_vma:               Miscellaneous.      (line   76)
-* bfd_get_size <1>:                      Miscellaneous.      (line  419)
-* bfd_get_size:                          Internal.           (line   25)
+* bfd_get_size <1>:                      Internal.           (line   25)
+* bfd_get_size:                          Miscellaneous.      (line  419)
 * bfd_get_symtab_upper_bound:            symbol handling functions.
                                                              (line    6)
 * bfd_get_target_info:                   bfd_target.         (line  489)
@@ -11189,7 +11190,7 @@ BFD Index
 * bfd_link_split_section:                Writing the symbol table.
                                                              (line   44)
 * bfd_log2:                              Internal.           (line  164)
-* bfd_lookup_arch:                       Architectures.      (line  620)
+* bfd_lookup_arch:                       Architectures.      (line  621)
 * bfd_make_debug_symbol:                 symbol handling functions.
                                                              (line  102)
 * bfd_make_empty_symbol:                 symbol handling functions.
@@ -11207,7 +11208,7 @@ BFD Index
 * bfd_map_over_sections:                 section prototypes. (line  178)
 * bfd_merge_private_bfd_data:            Miscellaneous.      (line  174)
 * bfd_mmap:                              Miscellaneous.      (line  448)
-* bfd_octets_per_byte:                   Architectures.      (line  643)
+* bfd_octets_per_byte:                   Architectures.      (line  644)
 * bfd_open_file:                         File Caching.       (line   52)
 * bfd_openr:                             Opening and Closing.
                                                              (line   35)
@@ -11222,8 +11223,8 @@ BFD Index
 * bfd_perror:                            Error reporting.    (line   76)
 * bfd_print_symbol_vandf:                symbol handling functions.
                                                              (line   70)
-* bfd_printable_arch_mach:               Architectures.      (line  631)
-* bfd_printable_name:                    Architectures.      (line  491)
+* bfd_printable_arch_mach:               Architectures.      (line  632)
+* bfd_printable_name:                    Architectures.      (line  492)
 * bfd_put_size:                          Internal.           (line   22)
 * BFD_RELOC_12_PCREL:                    howto manager.      (line   39)
 * BFD_RELOC_14:                          howto manager.      (line   31)
@@ -13114,14 +13115,14 @@ BFD Index
 * BFD_RELOC_Z8K_DISP7:                   howto manager.      (line 2604)
 * BFD_RELOC_Z8K_IMM4L:                   howto manager.      (line 2610)
 * bfd_rename_section:                    section prototypes. (line  169)
-* bfd_scan_arch:                         Architectures.      (line  500)
+* bfd_scan_arch:                         Architectures.      (line  501)
 * bfd_scan_vma:                          Miscellaneous.      (line  124)
 * bfd_seach_for_target:                  bfd_target.         (line  524)
 * bfd_section_already_linked:            Writing the symbol table.
                                                              (line   55)
 * bfd_section_list_clear:                section prototypes. (line    8)
 * bfd_sections_find_if:                  section prototypes. (line  199)
-* bfd_set_arch_info:                     Architectures.      (line  541)
+* bfd_set_arch_info:                     Architectures.      (line  542)
 * bfd_set_archive_head:                  Archives.           (line   75)
 * bfd_set_assert_handler:                Error reporting.    (line  141)
 * bfd_set_default_target:                bfd_target.         (line  463)
@@ -13173,70 +13174,70 @@ BFD Index
 
 
 Tag Table:
-Node: Top1060
-Node: Overview1399
-Node: History2450
-Node: How It Works3396
-Node: What BFD Version 2 Can Do4939
-Node: BFD information loss6254
-Node: Canonical format8786
-Node: BFD front end13158
-Node: typedef bfd13582
-Node: Error reporting24300
-Node: Miscellaneous29167
-Node: Memory Usage46310
-Node: Initialization47538
-Node: Sections47997
-Node: Section Input48480
-Node: Section Output49845
-Node: typedef asection52331
-Node: section prototypes77563
-Node: Symbols87820
-Node: Reading Symbols89415
-Node: Writing Symbols90522
-Node: Mini Symbols92263
-Node: typedef asymbol93237
-Node: symbol handling functions99296
-Node: Archives104638
-Node: Formats108667
-Node: Relocations111615
-Node: typedef arelent112342
-Node: howto manager127978
-Node: Core Files234626
-Node: Targets236664
-Node: bfd_target238634
-Node: Architectures261856
-Node: Opening and Closing288730
-Node: Internal302076
-Node: File Caching308421
-Node: Linker Functions310335
-Node: Creating a Linker Hash Table312008
-Node: Adding Symbols to the Hash Table313746
-Node: Differing file formats314646
-Node: Adding symbols from an object file316371
-Node: Adding symbols from an archive318522
-Node: Performing the Final Link321451
-Node: Information provided by the linker322693
-Node: Relocating the section contents323847
-Node: Writing the symbol table325598
-Node: Hash Tables329982
-Node: Creating and Freeing a Hash Table331180
-Node: Looking Up or Entering a String332430
-Node: Traversing a Hash Table333683
-Node: Deriving a New Hash Table Type334472
-Node: Define the Derived Structures335538
-Node: Write the Derived Creation Routine336619
-Node: Write Other Derived Routines339243
-Node: BFD back ends340558
-Node: What to Put Where340828
-Node: aout341008
-Node: coff347326
-Node: elf375763
-Node: mmo376164
-Node: File layout377092
-Node: Symbol-table382739
-Node: mmo section mapping386508
-Node: GNU Free Documentation License390160
-Node: BFD Index415243
+Node: Top1061
+Node: Overview1400
+Node: History2451
+Node: How It Works3397
+Node: What BFD Version 2 Can Do4940
+Node: BFD information loss6255
+Node: Canonical format8787
+Node: BFD front end13159
+Node: typedef bfd13583
+Node: Error reporting24301
+Node: Miscellaneous29168
+Node: Memory Usage46311
+Node: Initialization47539
+Node: Sections47998
+Node: Section Input48481
+Node: Section Output49846
+Node: typedef asection52332
+Node: section prototypes77564
+Node: Symbols87821
+Node: Reading Symbols89416
+Node: Writing Symbols90523
+Node: Mini Symbols92264
+Node: typedef asymbol93238
+Node: symbol handling functions99297
+Node: Archives104639
+Node: Formats108668
+Node: Relocations111616
+Node: typedef arelent112343
+Node: howto manager127979
+Node: Core Files234627
+Node: Targets236665
+Node: bfd_target238635
+Node: Architectures261857
+Node: Opening and Closing288775
+Node: Internal302121
+Node: File Caching308466
+Node: Linker Functions310380
+Node: Creating a Linker Hash Table312053
+Node: Adding Symbols to the Hash Table313791
+Node: Differing file formats314691
+Node: Adding symbols from an object file316416
+Node: Adding symbols from an archive318567
+Node: Performing the Final Link321496
+Node: Information provided by the linker322738
+Node: Relocating the section contents323892
+Node: Writing the symbol table325643
+Node: Hash Tables330027
+Node: Creating and Freeing a Hash Table331225
+Node: Looking Up or Entering a String332475
+Node: Traversing a Hash Table333728
+Node: Deriving a New Hash Table Type334517
+Node: Define the Derived Structures335583
+Node: Write the Derived Creation Routine336664
+Node: Write Other Derived Routines339288
+Node: BFD back ends340603
+Node: What to Put Where340873
+Node: aout341053
+Node: coff347371
+Node: elf375808
+Node: mmo376209
+Node: File layout377137
+Node: Symbol-table382784
+Node: mmo section mapping386553
+Node: GNU Free Documentation License390205
+Node: BFD Index415288
 
 End Tag Table

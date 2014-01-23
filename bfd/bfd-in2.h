@@ -2226,6 +2226,7 @@ enum bfd_architecture
 #define bfd_mach_r800           11 /* R800: successor with multiplication.  */
   bfd_arch_lm32,      /* Lattice Mico32 */
 #define bfd_mach_lm32      1
+  bfd_arch_lily2,     /* THU LILY2. */
   bfd_arch_microblaze,/* Xilinx MicroBlaze. */
   bfd_arch_tilepro,   /* Tilera TILEPro */
   bfd_arch_tilegx, /* Tilera TILE-Gx */
