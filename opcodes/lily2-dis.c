@@ -100,48 +100,49 @@ lily2_opcode_match (unsigned long insn, char *encoding)
   return 1;
 }
 
-/* Print register to INFO->STREAM. Used only by print_insn.  */
+/* Prints the functional unit. */
+static void
+lily2_print_functional_unit (char param_ch,
+                             char *encoding,
+                             unsigned long insn,
+                             struct disassemble_info *info)
+{
+}
 
+/* Prints the execution condition. */
+static void
+lily2_print_condition (char param_ch,
+                       char *encoding,
+                       unsigned long insn,
+                       struct disassemble_info *info)
+{
+}
+
+/* Prints the operands. */
+static void
+lily2_print_operand (char param_ch,
+                     char *encoding,
+                     unsigned long insn,
+                     struct disassemble_info *info)
+{
+}
+
+/* Prints the register operand. */
 static void
 lily2_print_register (char param_ch,
 		     char *encoding,
 		     unsigned long insn,
 		     struct disassemble_info *info)
 {
-  int regnum = lily2_extract (param_ch, encoding, insn);
-
-#if DEBUG
-  printf ("lily2_print_register: %c, %s, %lx\n", param_ch, encoding, insn);
-#endif
-  if (param_ch == 'A')
-    (*info->fprintf_func) (info->stream, "r%d", regnum);
-  else if (param_ch == 'B')
-    (*info->fprintf_func) (info->stream, "r%d", regnum);
-  else if (param_ch == 'D')
-    (*info->fprintf_func) (info->stream, "r%d", regnum);
-  else if (regnum < 16)
-    (*info->fprintf_func) (info->stream, "r%d", regnum);
-  else if (regnum < 32)
-    (*info->fprintf_func) (info->stream, "r%d", regnum-16);
-  else
-    (*info->fprintf_func) (info->stream, "X%d", regnum);
 }
 
-/* Print immediate to INFO->STREAM. Used only by print_insn.  */
-
+/* Prints the immediate operand. */
 static void
 lily2_print_immediate (char param_ch,
-		      char *encoding,
-		      unsigned long insn,
-		      struct disassemble_info *info)
+		               char *encoding,
+		               unsigned long insn,
+		               struct disassemble_info *info)
 {
-  int imm = lily2_extract(param_ch, encoding, insn);
-
-  if (letter_signed(param_ch))
-    (*info->fprintf_func) (info->stream, "0x%x", imm);
-/*    (*info->fprintf_func) (info->stream, "%d", imm); */
-  else
-    (*info->fprintf_func) (info->stream, "0x%x", imm);
 }
 
 /* Print one instruction from MEMADDR on INFO->STREAM.
