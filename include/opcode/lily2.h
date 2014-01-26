@@ -201,6 +201,26 @@ extern const size_t lily2_num_opc_register_pair_pairs_y;
 extern const struct lily2_addr_mod_sign lily2_opc_addr_mod_signs[];
 extern const size_t lily2_num_opc_addr_mod_signs;
 
+/* Table of DIS_FUNCTIONAL_UNIT. */
+extern const struct lily2_functional_unit lily2_dis_functional_units[];
+extern const size_t lily2_num_dis_functional_units;
+
+/* Table of DIS_CONDITION. */
+extern const struct lily2_condition lily2_dis_conditions[];
+extern const size_t lily2_num_dis_conditions;
+
+/* Table of DIS_REGISTER. */
+extern const struct lily2_register lily2_dis_registers[];
+extern const size_t lily2_num_dis_registers;
+
+/* Table of DIS_REGISTER_PAIR. */
+extern const struct lily2_register lily2_dis_register_pairs[];
+extern const size_t lily2_num_dis_register_pairs;
+
+/* Table of DIS_REGISTER_PAIR_PAIR. */
+extern const struct lily2_register lily2_dis_register_pair_pairs[];
+extern const size_t lily2_num_dis_register_pair_pairs;
+
 /* Letter table isn't put into the hash table and it will be used by
    both opc and dis. Therefore we list letter_find functions alone
    for convenience. */

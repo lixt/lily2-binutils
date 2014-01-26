@@ -25,10 +25,91 @@
 
 #include "sysdep.h"
 #include "dis-asm.h"
-#include "opcode/lily2.h"
 #include "safe-ctype.h"
+#include "libiberty.h"
+#include "opcode/lily2.h"
 
 #define EXTEND29(x) ((x) & (unsigned long) 0x10000000 ? ((x) | (unsigned long) 0xf0000000) : ((x)))
+
+const struct lily2_functional_unit lily2_dis_functional_units[] =
+{
+    {"[xa]", 0x0, {"x", 0}, NULL},
+    {"[xa]", 0x1, {"x", 0}, NULL},
+    {"[xm]", 0x2, {"x", 0}, NULL},
+    {"[xd]", 0x3, {"x", 0}, NULL},
+    {"[ya]", 0x4, {"y", 1}, NULL},
+    {"[ya]", 0x5, {"y", 1}, NULL},
+    {"[ym]", 0x6, {"y", 1}, NULL},
+    {"[yd]", 0x7, {"y", 1}, NULL},
+};
+const size_t lily2_num_dis_functional_units = ARRAY_SIZE (lily2_dis_functional_units);
+
+const struct lily2_condition lily2_dis_conditions[] =
+{
+    {"      ", 0x0},
+    {"{ cf0}", 0x1},
+    {"{ cf1}", 0x2},
+    {"{ cf2}", 0x3},
+    {"{!cf0}", 0x4},
+    {"{!cf1}", 0x5},
+    {"{!cf2}", 0x6},
+};
+const size_t lily2_num_dis_conditions = ARRAY_SIZE (lily2_dis_conditions);
+
+const struct lily2_register lily2_dis_registers[] =
+{
+    {"a0 ", 0 }, {"a1 ", 1 }, {"a2 ", 2 }, {"a3 ", 3 },
+    {"a4 ", 4 }, {"a5 ", 5 }, {"a6 ", 6 }, {"a7 ", 7 },
+    {"a8 ", 8 }, {"a9 ", 9 }, {"a10", 10}, {"a11", 11},
+    {"a12", 12}, {"a13", 13}, {"a14", 14}, {"a15", 15},
+    {"a16", 16}, {"a17", 17}, {"a18", 18}, {"a19", 19},
+    {"a20", 21}, {"a21", 21}, {"a22", 22}, {"a23", 23},
+    {"c0 ", 24}, {"c1 ", 25}, {"c2 ", 26}, {"c3 ", 27},
+    {"c4 ", 28}, {"c5 ", 29}, {"c6 ", 30}, {"c7 ", 31},
+    {"b0 ", 32}, {"b1 ", 33}, {"b2 ", 34}, {"b3 ", 35},
+    {"b4 ", 36}, {"b5 ", 37}, {"b6 ", 38}, {"b7 ", 39},
+    {"b8 ", 40}, {"b9 ", 41}, {"b10", 42}, {"b11", 43},
+    {"b12", 44}, {"b13", 45}, {"b14", 46}, {"b15", 47},
+    {"b16", 48}, {"b17", 49}, {"b18", 50}, {"b19", 51},
+    {"b20", 52}, {"b21", 53}, {"b22", 54}, {"b23", 55},
+    {"c0 ", 56}, {"c1 ", 57}, {"c2 ", 58}, {"c3 ", 59},
+    {"c4 ", 60}, {"c5 ", 61}, {"c6 ", 62}, {"c7 ", 63},
+};
+const size_t lily2_num_dis_registers = ARRAY_SIZE (lily2_dis_registers);
+
+const struct lily2_register lily2_dis_register_pairs[] =
+{
+    {"a1 :a0 ", 0 }, {"a3 :a2 ", 2 },
+    {"a5 :a4 ", 4 }, {"a7 :a6 ", 6 },
+    {"a9 :a8 ", 8 }, {"a11:a10", 10},
+    {"a13:a12", 12}, {"a15:a14", 14},
+    {"a17:a16", 16}, {"a19:a18", 18},
+    {"a21:a20", 20}, {"a23:a22", 22},
+    {"c1 :c0 ", 24}, {"c3 :c2 ", 26},
+    {"c5 :c4 ", 28}, {"c7 :c5 ", 30},
+    {"b1 :b0 ", 32}, {"b3 :b2 ", 34},
+    {"b5 :b4 ", 36}, {"b7 :b6 ", 38},
+    {"b9 :b8 ", 40}, {"b11:b10", 42},
+    {"b13:b12", 44}, {"b15:b14", 46},
+    {"b17:b16", 48}, {"b19:b18", 50},
+    {"b21:b20", 52}, {"b23:b22", 54},
+    {"c1 :c0 ", 56}, {"c3 :c2 ", 58},
+    {"c5 :c4 ", 60}, {"c7 :c5 ", 62},
+};
+const size_t lily2_num_dis_register_pairs = ARRAY_SIZE (lily2_dis_register_pairs);
+
+const struct lily2_register lily2_dis_register_pair_pairs[] =
+{
+    {"a3 :a2 :a1 :a0 ", 0 }, {"a7 :a6 :a5 :a4 ", 4 },
+    {"a11:a10:a9 :a8 ", 8 }, {"a15:a14:a13:a12", 12},
+    {"a19:a18:a17:a16", 16}, {"a23:a22:a21:a20", 20},
+    {"c3 :c2 :c1 :c0 ", 24}, {"c7 :c6 :c5 :c4 ", 28},
+    {"b3 :b2 :b1 :b0 ", 32}, {"b7 :b6 :b5 :b4 ", 36},
+    {"b11:b10:b9 :b8 ", 40}, {"b15:b14:b13:b12", 44},
+    {"b19:b18:b17:b16", 48}, {"b23:b22:b21:b20", 52},
+    {"c3 :c2 :c1 :c0 ", 56}, {"c7 :c6 :c5 :c4 ", 60},
+};
+const size_t lily2_num_dis_register_pair_pairs = ARRAY_SIZE (lily2_dis_register_pair_pairs);
 
 /* Now find the four bytes of INSN_CH and put them in *INSN.  */
 
@@ -58,9 +139,23 @@ find_bytes_little (unsigned char *insn_ch, unsigned long *insn)
 typedef void (*find_byte_func_type) (unsigned char *, unsigned long *);
 
 static unsigned long
-lily2_extract (char param_ch, char *enc_initial, unsigned long insn)
+lily2_extract (char param_ch, char *encoding, unsigned long insn)
 {
-    return 0;
+    unsigned long extract_insn = 0;
+    int extract_bit = 31;
+
+    for (; *encoding; ++encoding) {
+        /* Extracts bits of INSN. */
+        if (*encoding == param_ch) {
+            extract_insn += bits (insn, extract_bit, extract_bit);
+        }
+        /* Counting down the extracting bit. */
+        if (*encoding != ' ') {
+            --extract_bit;
+        }
+    }
+
+    return extract_insn;
 }
 
 static int
@@ -107,6 +202,25 @@ lily2_print_functional_unit (char param_ch,
                              unsigned long insn,
                              struct disassemble_info *info)
 {
+#if DEBUG
+    printf ("<----- Enter function (lily2_print_functional_unit).\n");
+    printf ("       param_ch: `%c'.\n", param_ch);
+    printf ("       encoding: ``%s''.\n", encoding);
+    printf ("       insn: 0x%08x.\n", insn);
+#endif
+
+    unsigned long functional_unit_insn =
+        lily2_extract (param_ch, encoding, insn);
+
+    //char *functional_unit_str =
+    //    dis_hash_find (dis_functional_unit_hash, functional_unit_insn);
+
+    //(*info->fprintf_func) (info->stream, "%s", functional_unit_str);
+
+#if DEBUG
+    printf ("       extract str: ``%s''.\n", functional_unit_str);
+    printf ("-----> Leave function (lily2_print_functional_unit).\n");
+#endif
 }
 
 /* Prints the execution condition. */
