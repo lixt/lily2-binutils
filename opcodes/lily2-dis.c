@@ -111,6 +111,133 @@ const struct lily2_register lily2_dis_register_pair_pairs[] =
 };
 const size_t lily2_num_dis_register_pair_pairs = ARRAY_SIZE (lily2_dis_register_pair_pairs);
 
+const struct lily2_opcode lily2_dis_opcodes[] =
+{
+    {"add"    , "rD,rA,rB", "E 00 000 000 - 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.b.4", "rD,rA,rB", "E 00 000 000 - 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.h.2", "rD,rA,rB", "E 00 000 000 - 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.h.4", "dD,dA,dB", "E 00 000 000 - 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.w.2", "dD,dA,dB", "E 00 000 000 - 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.i"  , "rD,rA,iI", "E 00 000 000 - 1 11111111 AAAAA DDDDD ZZZ", 0},
+};
+const size_t lily2_num_dis_opcodes = ARRAY_SIZE (lily2_dis_opcodes);
+
+const struct lily2_addr_mod_sign lily2_dis_addr_mod_prefix_signs[] =
+{
+    {"++", 0x0}, {"\0", 0x1}, {"--", 0x2}, {"\0", 0x3},
+};
+const size_t lily2_num_dis_addr_mod_prefix_signs = ARRAY_SIZE (lily2_dis_addr_mod_prefix_signs);
+const struct lily2_addr_mod_sign lily2_dis_addr_mod_suffix_signs[] =
+{
+    {"\0", 0x0}, {"++", 0x1}, {"\0", 0x2}, {"--", 0x3},
+};
+const size_t lily2_num_dis_addr_mod_suffix_signs = ARRAY_SIZE (lily2_dis_addr_mod_suffix_signs);
+
+static struct lily2_functional_unit *
+dis_functional_unit_find (unsigned long insn)
+{
+    struct lily2_functional_unit *retval = NULL;
+
+    int i;
+    for (i = 0; i != lily2_num_dis_functional_units; ++i) {
+        if (lily2_dis_functional_units[i].code == insn) {
+            retval = &lily2_dis_functional_units[i];
+        }
+    }
+
+    return retval;
+}
+
+static struct lily2_condition *
+dis_condition_find (unsigned long insn)
+{
+    struct lily2_condition *retval = NULL;
+
+    int i;
+    for (i = 0; i != lily2_num_dis_conditions; ++i) {
+        if (lily2_dis_conditions[i].code == insn) {
+            retval = &lily2_dis_conditions[i];
+        }
+    }
+
+    return retval;
+}
+
+static struct lily2_register *
+dis_register_find (unsigned long insn)
+{
+    struct lily2_register *retval = NULL;
+
+    int i;
+    for (i = 0; i != lily2_num_dis_registers; ++i) {
+        if (lily2_dis_registers[i].code == insn) {
+            retval = &lily2_dis_registers[i];
+        }
+    }
+
+    return retval;
+}
+
+static struct lily2_register *
+dis_register_pair_find (unsigned long insn)
+{
+    struct lily2_register *retval = NULL;
+
+    int i;
+    for (i = 0; i != lily2_num_dis_register_pairs; ++i) {
+        if (lily2_dis_register_pairs[i].code == insn) {
+            retval = &lily2_dis_register_pairs[i];
+        }
+    }
+
+    return retval;
+}
+
+static struct lily2_register *
+dis_register_pair_pair_find (unsigned long insn)
+{
+    struct lily2_register *retval = NULL;
+
+    int i;
+    for (i = 0; i != lily2_num_dis_register_pair_pairs; ++i) {
+        if (lily2_dis_register_pair_pairs[i].code == insn) {
+            retval = &lily2_dis_register_pair_pairs[i];
+        }
+    }
+
+    return retval;
+}
+
+static struct lily2_addr_mod_sign *
+dis_addr_mod_prefix_sign_find (unsigned long insn)
+{
+    struct lily2_addr_mod_sign *retval = NULL;
+
+    int i;
+    for (i = 0; i != lily2_num_dis_addr_mod_prefix_signs; ++i) {
+        if (lily2_dis_addr_mod_prefix_signs[i].code == insn) {
+            retval = &lily2_dis_addr_mod_prefix_signs[i];
+        }
+    }
+
+    return retval;
+}
+
+static struct lily2_addr_mod_sign *
+dis_addr_mod_suffix_sign_find (unsigned long insn)
+{
+    struct lily2_addr_mod_sign *retval = NULL;
+
+    int i;
+    for (i = 0; i != lily2_num_dis_addr_mod_suffix_signs; ++i) {
+        if (lily2_dis_addr_mod_suffix_signs[i].code == insn) {
+            retval = &lily2_dis_addr_mod_suffix_signs[i];
+        }
+    }
+
+    return retval;
+}
+
 /* Now find the four bytes of INSN_CH and put them in *INSN.  */
 
 static void
@@ -195,8 +322,9 @@ lily2_opcode_match (unsigned long insn, char *encoding)
   return 1;
 }
 
-/* Prints the functional unit. */
-static void
+/* Prints the functional unit.
+   On success, returns 1. On failure, returns 0. */
+static int
 lily2_print_functional_unit (char param_ch,
                              char *encoding,
                              unsigned long insn,
@@ -209,27 +337,71 @@ lily2_print_functional_unit (char param_ch,
     printf ("       insn: 0x%08x.\n", insn);
 #endif
 
-    unsigned long functional_unit_insn =
-        lily2_extract (param_ch, encoding, insn);
+    int retval;
 
-    //char *functional_unit_str =
-    //    dis_hash_find (dis_functional_unit_hash, functional_unit_insn);
+    unsigned long functional_unit_insn = lily2_extract (param_ch, encoding, insn);
+    struct lily2_functional_unit *
+    functional_unit = dis_functional_unit_find (functional_unit_insn);
 
-    //(*info->fprintf_func) (info->stream, "%s", functional_unit_str);
+    if (!functional_unit) {
+        /* Illegal INSN of functional unit. */
+#if DEBUG
+        printf ("       extract str: (nil).\n");
+#endif
+        retval = 0;
+    } else {
+#if DEBUG
+        printf ("       extract str: ``%s''.\n", functional_unit->name);
+#endif
+        retval = 1;
+        (*info->fprintf_func) (info->stream, "%s", functional_unit->name);
+    }
 
 #if DEBUG
-    printf ("       extract str: ``%s''.\n", functional_unit_str);
     printf ("-----> Leave function (lily2_print_functional_unit).\n");
 #endif
+
+    return retval;
 }
 
 /* Prints the execution condition. */
-static void
+static int
 lily2_print_condition (char param_ch,
                        char *encoding,
                        unsigned long insn,
                        struct disassemble_info *info)
 {
+#if DEBUG
+    printf ("<----- Enter function (lily2_print_condition).\n");
+    printf ("       param_ch: `%c'.\n", param_ch);
+    printf ("       encoding: ``%s''.\n", encoding);
+    printf ("       insn: 0x%08x.\n", insn);
+#endif
+
+    int retval;
+
+    unsigned long condition_insn = lily2_extract (param_ch, encoding, insn);
+    struct lily2_condition *condition = dis_condition_find (condition_insn);
+
+    if (!condition) {
+        /* Illegal INSN of condition. */
+#if DEBUG
+        printf ("       extract str: (nil).\n");
+#endif
+        retval = 0;
+    } else {
+#if DEBUG
+        printf ("       extract str: ``%s''.\n", condition->name);
+#endif
+        retval = 1;
+        (*info->fprintf_func) (info->stream, "%s", condition->name);
+    }
+
+#if DEBUG
+    printf ("-----> Leave function (lily2_print_condition).\n");
+#endif
+
+    return retval;
 }
 
 /* Prints the operands. */
@@ -241,22 +413,239 @@ lily2_print_operand (char param_ch,
 {
 }
 
-/* Prints the register operand. */
-static void
+/* Prints the register operand.
+   On success, returns 1. On failure, returns 0.*/
+static int
 lily2_print_register (char param_ch,
-		     char *encoding,
-		     unsigned long insn,
-		     struct disassemble_info *info)
+		              char *encoding,
+		              unsigned long insn,
+		              struct disassemble_info *info)
 {
+#if DEBUG
+    printf ("<----- Enter function (lily2_print_register).\n");
+    printf ("       param_ch: `%c'.\n", param_ch);
+    printf ("       encoding: ``%s''.\n", encoding);
+    printf ("       insn: 0x%08x.\n", insn);
+#endif
+
+    int retval;
+
+    unsigned long register_insn = lily2_extract (param_ch, encoding, insn);
+    struct lily2_register *reg = dis_register_find (register_insn);
+
+    if (!reg) {
+        /* Illegal INSN of register. */
+#if DEBUG
+        printf ("       extract str: (nil).\n");
+#endif
+        retval = 0;
+    } else {
+#if DEBUG
+        printf ("       extract str: ``%s''.\n", reg->name);
+#endif
+        retval = 1;
+        (*info->fprintf_func) (info->stream, "%s", reg->name);
+    }
+
+#if DEBUG
+    printf ("-----> Leave function (lily2_print_register).\n");
+#endif
+
+    return retval;
+}
+
+/* Prints the register-pair operand.
+   On success, returns 1. On failure, returns 0.*/
+static int
+lily2_print_register_pair (char param_ch,
+		                   char *encoding,
+		                   unsigned long insn,
+		                   struct disassemble_info *info)
+{
+#if DEBUG
+    printf ("<----- Enter function (lily2_print_register_pair).\n");
+    printf ("       param_ch: `%c'.\n", param_ch);
+    printf ("       encoding: ``%s''.\n", encoding);
+    printf ("       insn: 0x%08x.\n", insn);
+#endif
+
+    int retval;
+
+    unsigned long register_pair_insn = lily2_extract (param_ch, encoding, insn);
+    struct lily2_register *reg_pair = dis_register_pair_find (register_pair_insn);
+
+    if (!reg_pair) {
+        /* Illegal INSN of register-pair. */
+#if DEBUG
+        printf ("       extract str: (nil).\n");
+#endif
+        retval = 0;
+    } else {
+#if DEBUG
+        printf ("       extract str: ``%s''.\n", reg_pair->name);
+#endif
+        retval = 1;
+        (*info->fprintf_func) (info->stream, "%s", reg_pair->name);
+    }
+
+#if DEBUG
+    printf ("-----> Leave function (lily2_print_register_pair).\n");
+#endif
+
+    return retval;
+}
+
+/* Prints the register-pair-pair operand.
+   On success, returns 1. On failure, returns 0.*/
+static int
+lily2_print_register_pair_pair (char param_ch,
+		                        char *encoding,
+		                        unsigned long insn,
+		                        struct disassemble_info *info)
+{
+#if DEBUG
+    printf ("<----- Enter function (lily2_print_register_pair_pair).\n");
+    printf ("       param_ch: `%c'.\n", param_ch);
+    printf ("       encoding: ``%s''.\n", encoding);
+    printf ("       insn: 0x%08x.\n", insn);
+#endif
+
+    int retval;
+
+    unsigned long register_pair_pair_insn = lily2_extract (param_ch, encoding, insn);
+    struct lily2_register
+    *reg_pair_pair = dis_register_pair_pair_find (register_pair_pair_insn);
+
+    if (!reg_pair_pair) {
+        /* Illegal INSN of register-pair-pair. */
+#if DEBUG
+        printf ("       extract str: (nil).\n");
+#endif
+        retval = 0;
+    } else {
+#if DEBUG
+        printf ("       extract str: ``%s''.\n", reg_pair_pair->name);
+#endif
+        retval = 1;
+        (*info->fprintf_func) (info->stream, "%s", reg_pair_pair->name);
+    }
+
+#if DEBUG
+    printf ("-----> Leave function (lily2_print_register_pair_pair).\n");
+#endif
+
+    return retval;
 }
 
 /* Prints the immediate operand. */
-static void
+static int
 lily2_print_immediate (char param_ch,
 		               char *encoding,
 		               unsigned long insn,
 		               struct disassemble_info *info)
 {
+#if DEBUG
+    printf ("<----- Enter function (lily2_print_immediate).\n");
+    printf ("       param_ch: `%c'.\n", param_ch);
+    printf ("       encoding: ``%s''.\n", encoding);
+    printf ("       insn: 0x%08x.\n", insn);
+#endif
+
+    int retval;
+
+    unsigned long imm_insn = lily2_extract (param_ch, encoding, insn);
+    (*info->fprintf_func) (info->stream, "0x%x", imm_insn);
+
+#if DEBUG
+    printf ("       extract str = 0x%x", imm_insn);
+    printf ("-----> Leave function (lily2_print_immediate).\n");
+#endif
+
+    return retval = 1;
+}
+
+/* Prints the address modification prefix sign.
+   On success, returns 1. On failure, returns 0. */
+static int
+lily2_print_addr_mod_prefix_sign (char param_ch,
+                                  char *encoding,
+                                  unsigned long insn,
+                                  struct disassemble_info *info)
+{
+#if DEBUG
+    printf ("<----- Enter function (lily2_print_addr_mod_prefix_sign).\n");
+    printf ("       param_ch: `%c'.\n", param_ch);
+    printf ("       encoding: ``%s''.\n", encoding);
+    printf ("       insn: 0x%08x.\n", insn);
+#endif
+
+    int retval;
+
+    unsigned long addr_mod_prefix_sign_insn = lily2_extract (param_ch, encoding, insn);
+    struct lily2_addr_mod_sign *
+    addr_mod_prefix_sign = dis_addr_mod_prefix_sign_find (addr_mod_prefix_sign_insn);
+
+    if (!addr_mod_prefix_sign) {
+        /* Illegal INSN of address modification prefix sign. */
+#if DEBUG
+        printf ("       extract str: (nil).\n");
+#endif
+        retval = 0;
+    } else {
+#if DEBUG
+        printf ("       extract str: ``%s''.\n", addr_mod_prefix_sign->name);
+#endif
+        retval = 1;
+        (*info->fprintf_func) (info->stream, "%s", addr_mod_prefix_sign->name);
+    }
+
+#if DEBUG
+    printf ("-----> Leave function (lily2_print_addr_mod_prefix_sign).\n");
+#endif
+
+    return retval;
+}
+
+/* Prints the address modification suffix sign.
+   On success, returns 1. On failure, returns 0. */
+static int
+lily2_print_addr_mod_suffix_sign (char param_ch,
+                                  char *encoding,
+                                  unsigned long insn,
+                                  struct disassemble_info *info)
+{
+#if DEBUG
+    printf ("<----- Enter function (lily2_print_addr_mod_suffix_sign).\n");
+    printf ("       param_ch: `%c'.\n", param_ch);
+    printf ("       encoding: ``%s''.\n", encoding);
+    printf ("       insn: 0x%08x.\n", insn);
+#endif
+
+    int retval;
+
+    unsigned long addr_mod_suffix_sign_insn = lily2_extract (param_ch, encoding, insn);
+    struct lily2_addr_mod_sign *
+    addr_mod_suffix_sign = dis_addr_mod_suffix_sign_find (addr_mod_suffix_sign_insn);
+
+    if (!addr_mod_suffix_sign) {
+        /* Illegal INSN of address modification suffix sign. */
+#if DEBUG
+        printf ("       extract str: (nil).\n");
+#endif
+        retval = 0;
+    } else {
+#if DEBUG
+        printf ("       extract str: ``%s''.\n", addr_mod_suffix_sign->name);
+#endif
+        retval = 1;
+        (*info->fprintf_func) (info->stream, "%s", addr_mod_suffix_sign->name);
+    }
+
+#if DEBUG
+    printf ("-----> Leave function (lily2_print_addr_mod_suffix_sign).\n");
+#endif
+
+    return retval;
 }
 
 /* Print one instruction from MEMADDR on INFO->STREAM.
