@@ -20,7 +20,7 @@
    MA 02110-1301, USA.  */
 
 #ifndef DEBUG
-#define DEBUG 0
+#define DEBUG 1
 #endif
 
 #include "sysdep.h"
@@ -30,6 +30,9 @@
 #include "opcode/lily2.h"
 
 #define EXTEND29(x) ((x) & (unsigned long) 0x10000000 ? ((x) | (unsigned long) 0xf0000000) : ((x)))
+
+/* Storage for error information. */
+static char error[100];
 
 const struct lily2_functional_unit lily2_dis_functional_units[] =
 {
@@ -113,12 +116,12 @@ const size_t lily2_num_dis_register_pair_pairs = ARRAY_SIZE (lily2_dis_register_
 
 const struct lily2_opcode lily2_dis_opcodes[] =
 {
-    {"add"    , "rD,rA,rB", "E 00 000 000 - 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.b.4", "rD,rA,rB", "E 00 000 000 - 0 100BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.h.2", "rD,rA,rB", "E 00 000 000 - 0 101BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.h.4", "dD,dA,dB", "E 00 000 000 - 0 110BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.w.2", "dD,dA,dB", "E 00 000 000 - 0 111BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.i"  , "rD,rA,iI", "E 00 000 000 - 1 11111111 AAAAA DDDDD ZZZ", 0},
+    {"add"    , "rD,rA,rB", "FFF 000 000 - 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.b.4", "rD,rA,rB", "FFF 000 000 - 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.h.2", "rD,rA,rB", "FFF 000 000 - 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.h.4", "dD,dA,dB", "FFF 000 000 - 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.w.2", "dD,dA,dB", "FFF 000 000 - 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.i"  , "rD,rA,iI", "FFF 000 000 - 1 11111111 AAAAA DDDDD ZZZ", 0},
 };
 const size_t lily2_num_dis_opcodes = ARRAY_SIZE (lily2_dis_opcodes);
 
@@ -249,7 +252,7 @@ find_bytes_big (unsigned char *insn_ch, unsigned long *insn)
     ((unsigned long) insn_ch[2] << 8) +
     ((unsigned long) insn_ch[3]);
 #if DEBUG
-  printf ("find_bytes_big3: %lx\n", *insn);
+  //printf ("find_bytes_big3: %lx\n", *insn);
 #endif
 }
 
@@ -274,6 +277,7 @@ lily2_extract (char param_ch, char *encoding, unsigned long insn)
     for (; *encoding; ++encoding) {
         /* Extracts bits of INSN. */
         if (*encoding == param_ch) {
+            extract_insn <<= 1;
             extract_insn += bits (insn, extract_bit, extract_bit);
         }
         /* Counting down the extracting bit. */
@@ -288,38 +292,26 @@ lily2_extract (char param_ch, char *encoding, unsigned long insn)
 static int
 lily2_opcode_match (unsigned long insn, char *encoding)
 {
-  unsigned long ones, zeros;
+    int bit = 31;
+    for (; *encoding; ++encoding) {
+        /* `0' or `1'. */
+        if (*encoding == '0') {
+            if (bits (insn, bit, bit) != 0) {
+                return 0;
+            }
+        } else if (*encoding == '1') {
+            if (bits (insn, bit, bit) != 1) {
+                return 0;
+            }
+        }
 
-#if DEBUG
-  printf ("lily2_opcode_match: %.8lx\n", insn);
-#endif
-  ones  = lily2_extract ('1', encoding, insn);
-  zeros = lily2_extract ('0', encoding, insn);
-
-#if DEBUG
-  printf ("ones: %lx \n", ones);
-  printf ("zeros: %lx \n", zeros);
-#endif
-  if ((insn & ones) != ones)
-    {
-#if DEBUG
-      printf ("ret1\n");
-#endif
-      return 0;
+        if (*encoding != ' ') {
+            --bit;
+        }
     }
 
-  if ((~insn & zeros) != zeros)
-    {
-#if DEBUG
-      printf ("ret2\n");
-#endif
-      return 0;
-    }
-
-#if DEBUG
-  printf ("ret3\n");
-#endif
-  return 1;
+    /* Matches the opcodes. */
+    return 1;
 }
 
 /* Prints the functional unit.
@@ -348,17 +340,19 @@ lily2_print_functional_unit (char param_ch,
 #if DEBUG
         printf ("       extract str: (nil).\n");
 #endif
+        sprintf (error, "can't disasemble functional unit (0x%x).\n", insn);
         retval = 0;
     } else {
 #if DEBUG
         printf ("       extract str: ``%s''.\n", functional_unit->name);
 #endif
         retval = 1;
-        (*info->fprintf_func) (info->stream, "%s", functional_unit->name);
+        (*info->fprintf_func) (info->stream, "%s ", functional_unit->name);
     }
 
 #if DEBUG
     printf ("-----> Leave function (lily2_print_functional_unit).\n");
+    printf ("\n");
 #endif
 
     return retval;
@@ -388,29 +382,44 @@ lily2_print_condition (char param_ch,
 #if DEBUG
         printf ("       extract str: (nil).\n");
 #endif
+        sprintf (error, "can't disassemble condition (0x%x).\n", insn);
         retval = 0;
     } else {
 #if DEBUG
         printf ("       extract str: ``%s''.\n", condition->name);
 #endif
         retval = 1;
-        (*info->fprintf_func) (info->stream, "%s", condition->name);
+        (*info->fprintf_func) (info->stream, "%s ", condition->name);
     }
 
 #if DEBUG
     printf ("-----> Leave function (lily2_print_condition).\n");
+    printf ("\n");
 #endif
 
     return retval;
 }
 
-/* Prints the operands. */
-static void
-lily2_print_operand (char param_ch,
-                     char *encoding,
-                     unsigned long insn,
-                     struct disassemble_info *info)
+/* Calculates the insn of registers. */
+static unsigned long
+calc_register_insn (char param_ch, char *encoding, unsigned long insn)
 {
+    unsigned long register_insn = lily2_extract (param_ch, encoding, insn);
+    switch (param_ch) {
+        case 'A':
+        case 'B':
+        case 'D': /* Normal. */
+            register_insn += (bits (insn, 31, 31) == 0 ? 0 : 32);
+            break;
+        case 'X': /* Cross-Cluster. */
+            register_insn += (bits (insn, 31, 31) == 0 ? 32 : 0);
+            break;
+        case 'C': /* Miscellaneous. */
+        default :
+            break;
+    }
+
+    return register_insn;
 }
 
 /* Prints the register operand.
@@ -430,7 +439,7 @@ lily2_print_register (char param_ch,
 
     int retval;
 
-    unsigned long register_insn = lily2_extract (param_ch, encoding, insn);
+    unsigned long register_insn = calc_register_insn (param_ch, encoding, insn);
     struct lily2_register *reg = dis_register_find (register_insn);
 
     if (!reg) {
@@ -438,6 +447,7 @@ lily2_print_register (char param_ch,
 #if DEBUG
         printf ("       extract str: (nil).\n");
 #endif
+        sprintf (error, "can't disassemble register (0x%x).\n", insn);
         retval = 0;
     } else {
 #if DEBUG
@@ -449,6 +459,7 @@ lily2_print_register (char param_ch,
 
 #if DEBUG
     printf ("-----> Leave function (lily2_print_register).\n");
+    printf ("\n");
 #endif
 
     return retval;
@@ -471,7 +482,7 @@ lily2_print_register_pair (char param_ch,
 
     int retval;
 
-    unsigned long register_pair_insn = lily2_extract (param_ch, encoding, insn);
+    unsigned long register_pair_insn = calc_register_insn (param_ch, encoding, insn);
     struct lily2_register *reg_pair = dis_register_pair_find (register_pair_insn);
 
     if (!reg_pair) {
@@ -479,6 +490,7 @@ lily2_print_register_pair (char param_ch,
 #if DEBUG
         printf ("       extract str: (nil).\n");
 #endif
+        sprintf (error, "can't disassemble register-pair (0x%x).\n", insn);
         retval = 0;
     } else {
 #if DEBUG
@@ -490,6 +502,7 @@ lily2_print_register_pair (char param_ch,
 
 #if DEBUG
     printf ("-----> Leave function (lily2_print_register_pair).\n");
+    printf ("\n");
 #endif
 
     return retval;
@@ -512,7 +525,7 @@ lily2_print_register_pair_pair (char param_ch,
 
     int retval;
 
-    unsigned long register_pair_pair_insn = lily2_extract (param_ch, encoding, insn);
+    unsigned long register_pair_pair_insn = calc_register_insn (param_ch, encoding, insn);
     struct lily2_register
     *reg_pair_pair = dis_register_pair_pair_find (register_pair_pair_insn);
 
@@ -521,6 +534,7 @@ lily2_print_register_pair_pair (char param_ch,
 #if DEBUG
         printf ("       extract str: (nil).\n");
 #endif
+        sprintf ("can't disassemble register-pair-pair (0x%x).\n", insn);
         retval = 0;
     } else {
 #if DEBUG
@@ -532,6 +546,7 @@ lily2_print_register_pair_pair (char param_ch,
 
 #if DEBUG
     printf ("-----> Leave function (lily2_print_register_pair_pair).\n");
+    printf ("\n");
 #endif
 
     return retval;
@@ -559,6 +574,7 @@ lily2_print_immediate (char param_ch,
 #if DEBUG
     printf ("       extract str = 0x%x", imm_insn);
     printf ("-----> Leave function (lily2_print_immediate).\n");
+    printf ("\n");
 #endif
 
     return retval = 1;
@@ -590,6 +606,9 @@ lily2_print_addr_mod_prefix_sign (char param_ch,
 #if DEBUG
         printf ("       extract str: (nil).\n");
 #endif
+        sprintf (error,
+                 "can't disassemble address modification prefix sign (0x%x).\n",
+                 insn);
         retval = 0;
     } else {
 #if DEBUG
@@ -601,6 +620,7 @@ lily2_print_addr_mod_prefix_sign (char param_ch,
 
 #if DEBUG
     printf ("-----> Leave function (lily2_print_addr_mod_prefix_sign).\n");
+    printf ("\n");
 #endif
 
     return retval;
@@ -632,6 +652,9 @@ lily2_print_addr_mod_suffix_sign (char param_ch,
 #if DEBUG
         printf ("       extract str: (nil).\n");
 #endif
+        sprintf (error,
+                 "can't disassemble address modification suffix sign (0x%x).\n",
+                 insn);
         retval = 0;
     } else {
 #if DEBUG
@@ -643,6 +666,7 @@ lily2_print_addr_mod_suffix_sign (char param_ch,
 
 #if DEBUG
     printf ("-----> Leave function (lily2_print_addr_mod_suffix_sign).\n");
+    printf ("\n");
 #endif
 
     return retval;
@@ -654,7 +678,98 @@ lily2_print_addr_mod_suffix_sign (char param_ch,
 static int
 print_insn (bfd_vma memaddr, struct disassemble_info *info)
 {
-    return 0;
+    int retval = 1;
+
+    unsigned char insn_ch[4];
+    unsigned long insn;
+    find_byte_func_type find_byte_func = (find_byte_func_type) info->private_data;
+
+    struct lily2_opcode *opcode;
+
+    int status = (*info->read_memory_func) (memaddr, (bfd_byte *) &insn_ch[0], 4, info);
+
+    if (status != 0)
+    {
+        (*info->memory_error_func) (status, memaddr, info);
+        return -1;
+    }
+
+    (*find_byte_func) (&insn_ch[0], &insn);
+
+#if DEBUG
+    printf ("********************** NEW INSTRUCTION (0x%08x) *********************\n", insn);
+#endif
+
+    for (opcode = lily2_dis_opcodes;
+         opcode != lily2_dis_opcodes + lily2_num_dis_opcodes;
+         ++opcode) {
+
+        if (!lily2_opcode_match (insn, opcode->encoding)) {
+            continue;
+        } else {
+            /* Finds the matching opcode. */
+
+            /* Prints the functional units. */
+            lily2_print_functional_unit ('F', opcode->encoding, insn, info);
+
+            /* Prints the conditions. */
+            lily2_print_condition ('Z', opcode->encoding, insn, info);
+
+            /* Prints the instruction name. */
+            (*info->fprintf_func) (info->stream, "%s ", opcode->name);
+
+            /* Prints the operand lists. */
+            char *s;
+            for (s = opcode->args; s && *s != '\0' && retval; ++s) {
+                switch (*s) {
+                    case 'r': /* Register. */
+                        retval = lily2_print_register
+                            (*++s, opcode->encoding, insn, info);
+                        break;
+
+                    case 'd': /* Register-Pair. */
+                        retval = lily2_print_register_pair
+                            (*++s, opcode->encoding, insn, info);
+                        break;
+
+                    case 'q': /* Register-Pair-Pair. */
+                        retval = lily2_print_register_pair_pair
+                            (*++s, opcode->encoding, insn, info);
+                        break;
+
+                    case 'i': /* Immediate. */
+                        retval = lily2_print_immediate
+                            (*++s, opcode->encoding, insn, info);
+                        break;
+
+                    case '(':
+                    case ')':
+                    case '[':
+                    case ']':
+                    case ',': /* Symbols. */
+                        retval = (*info->fprintf_func)
+                            (info->stream, "%c", *s);
+                        break;
+
+                    case '*':
+                        retval = lily2_print_addr_mod_prefix_sign
+                            ('G', opcode->encoding, insn, info);
+                        break;
+                    case '#':
+                        retval = lily2_print_addr_mod_suffix_sign
+                            ('G', opcode->encoding, insn, info);
+                        break;
+
+                    default:
+                        retval = 0;
+                }
+            }
+        }
+    }
+
+    /* On success, returns the size of instruction.
+       On failure, returns -1. */
+    return (retval == 0) ? -1 : 4;
 }
 
 /* Disassemble a big-endian lily2 instruction.  */

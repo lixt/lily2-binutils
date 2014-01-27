@@ -1456,12 +1456,8 @@ machine_ip (char *str)
 
     if (retval) {
         remove_reserved_bit (encoding);
-        printf ("insn str = %s\n", encoding);
         remove_whitespace (encoding);
-        printf ("insn str = %s\n", encoding);
         the_insn.insn = strtoul (encoding, NULL, BASE_2);
-        printf ("insn str = %s\n", encoding);
-        printf ("insn = 0x%08x\n", the_insn.insn);
     }
 
     return retval;
