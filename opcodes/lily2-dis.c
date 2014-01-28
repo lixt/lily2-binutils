@@ -20,7 +20,7 @@
    MA 02110-1301, USA.  */
 
 #ifndef DEBUG
-#define DEBUG 1
+#define DEBUG 0
 #endif
 
 #include "sysdep.h"
@@ -61,67 +61,62 @@ const size_t lily2_num_dis_conditions = ARRAY_SIZE (lily2_dis_conditions);
 
 const struct lily2_register lily2_dis_registers[] =
 {
-    {"a0 ", 0 }, {"a1 ", 1 }, {"a2 ", 2 }, {"a3 ", 3 },
-    {"a4 ", 4 }, {"a5 ", 5 }, {"a6 ", 6 }, {"a7 ", 7 },
-    {"a8 ", 8 }, {"a9 ", 9 }, {"a10", 10}, {"a11", 11},
+    {"a0" , 0 }, {"a1" , 1 }, {"a2" , 2 }, {"a3" , 3 },
+    {"a4" , 4 }, {"a5" , 5 }, {"a6" , 6 }, {"a7" , 7 },
+    {"a8" , 8 }, {"a9" , 9 }, {"a10", 10}, {"a11", 11},
     {"a12", 12}, {"a13", 13}, {"a14", 14}, {"a15", 15},
     {"a16", 16}, {"a17", 17}, {"a18", 18}, {"a19", 19},
-    {"a20", 21}, {"a21", 21}, {"a22", 22}, {"a23", 23},
-    {"c0 ", 24}, {"c1 ", 25}, {"c2 ", 26}, {"c3 ", 27},
-    {"c4 ", 28}, {"c5 ", 29}, {"c6 ", 30}, {"c7 ", 31},
-    {"b0 ", 32}, {"b1 ", 33}, {"b2 ", 34}, {"b3 ", 35},
-    {"b4 ", 36}, {"b5 ", 37}, {"b6 ", 38}, {"b7 ", 39},
-    {"b8 ", 40}, {"b9 ", 41}, {"b10", 42}, {"b11", 43},
+    {"a20", 20}, {"a21", 21}, {"a22", 22}, {"a23", 23},
+    {"c0" , 24}, {"c1" , 25}, {"c2" , 26}, {"c3" , 27},
+    {"c4" , 28}, {"c5" , 29}, {"c6" , 30}, {"c7" , 31},
+    {"b0" , 32}, {"b1" , 33}, {"b2" , 34}, {"b3" , 35},
+    {"b4" , 36}, {"b5" , 37}, {"b6" , 38}, {"b7" , 39},
+    {"b8" , 40}, {"b9" , 41}, {"b10", 42}, {"b11", 43},
     {"b12", 44}, {"b13", 45}, {"b14", 46}, {"b15", 47},
     {"b16", 48}, {"b17", 49}, {"b18", 50}, {"b19", 51},
     {"b20", 52}, {"b21", 53}, {"b22", 54}, {"b23", 55},
-    {"c0 ", 56}, {"c1 ", 57}, {"c2 ", 58}, {"c3 ", 59},
-    {"c4 ", 60}, {"c5 ", 61}, {"c6 ", 62}, {"c7 ", 63},
+    {"c0" , 56}, {"c1" , 57}, {"c2" , 58}, {"c3" , 59},
+    {"c4" , 60}, {"c5" , 61}, {"c6" , 62}, {"c7" , 63},
 };
 const size_t lily2_num_dis_registers = ARRAY_SIZE (lily2_dis_registers);
 
 const struct lily2_register lily2_dis_register_pairs[] =
 {
-    {"a1 :a0 ", 0 }, {"a3 :a2 ", 2 },
-    {"a5 :a4 ", 4 }, {"a7 :a6 ", 6 },
-    {"a9 :a8 ", 8 }, {"a11:a10", 10},
+    {"a1:a0"  , 0 }, {"a3:a2"  , 2 },
+    {"a5:a4"  , 4 }, {"a7:a6"  , 6 },
+    {"a9:a8"  , 8 }, {"a11:a10", 10},
     {"a13:a12", 12}, {"a15:a14", 14},
     {"a17:a16", 16}, {"a19:a18", 18},
     {"a21:a20", 20}, {"a23:a22", 22},
-    {"c1 :c0 ", 24}, {"c3 :c2 ", 26},
-    {"c5 :c4 ", 28}, {"c7 :c5 ", 30},
-    {"b1 :b0 ", 32}, {"b3 :b2 ", 34},
-    {"b5 :b4 ", 36}, {"b7 :b6 ", 38},
-    {"b9 :b8 ", 40}, {"b11:b10", 42},
+    {"c1:c0"  , 24}, {"c3:c2"  , 26},
+    {"c5:c4"  , 28}, {"c7:c5"  , 30},
+    {"b1:b0"  , 32}, {"b3:b2"  , 34},
+    {"b5:b4"  , 36}, {"b7:b6"  , 38},
+    {"b9:b8"  , 40}, {"b11:b10", 42},
     {"b13:b12", 44}, {"b15:b14", 46},
     {"b17:b16", 48}, {"b19:b18", 50},
     {"b21:b20", 52}, {"b23:b22", 54},
-    {"c1 :c0 ", 56}, {"c3 :c2 ", 58},
-    {"c5 :c4 ", 60}, {"c7 :c5 ", 62},
+    {"c1:c0"  , 56}, {"c3:c2"  , 58},
+    {"c5:c4"  , 60}, {"c7:c5"  , 62},
 };
 const size_t lily2_num_dis_register_pairs = ARRAY_SIZE (lily2_dis_register_pairs);
 
 const struct lily2_register lily2_dis_register_pair_pairs[] =
 {
-    {"a3 :a2 :a1 :a0 ", 0 }, {"a7 :a6 :a5 :a4 ", 4 },
-    {"a11:a10:a9 :a8 ", 8 }, {"a15:a14:a13:a12", 12},
+    {"a3:a2:a1:a0"    , 0 }, {"a7:a6:a5:a4"    , 4 },
+    {"a11:a10:a9:a8"  , 8 }, {"a15:a14:a13:a12", 12},
     {"a19:a18:a17:a16", 16}, {"a23:a22:a21:a20", 20},
-    {"c3 :c2 :c1 :c0 ", 24}, {"c7 :c6 :c5 :c4 ", 28},
-    {"b3 :b2 :b1 :b0 ", 32}, {"b7 :b6 :b5 :b4 ", 36},
-    {"b11:b10:b9 :b8 ", 40}, {"b15:b14:b13:b12", 44},
+    {"c3:c2:c1:c0"    , 24}, {"c7:c6:c5:c4"    , 28},
+    {"b3:b2:b1:b0"    , 32}, {"b7:b6:b5:b4"    , 36},
+    {"b11:b10:b9:b8"  , 40}, {"b15:b14:b13:b12", 44},
     {"b19:b18:b17:b16", 48}, {"b23:b22:b21:b20", 52},
-    {"c3 :c2 :c1 :c0 ", 56}, {"c7 :c6 :c5 :c4 ", 60},
+    {"c3:c2:c1:c0"    , 56}, {"c7:c6:c5:c4"    , 60},
 };
 const size_t lily2_num_dis_register_pair_pairs = ARRAY_SIZE (lily2_dis_register_pair_pairs);
 
 const struct lily2_opcode lily2_dis_opcodes[] =
 {
-    {"add"    , "rD,rA,rB", "FFF 000 000 - 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.b.4", "rD,rA,rB", "FFF 000 000 - 0 100BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.h.2", "rD,rA,rB", "FFF 000 000 - 0 101BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.h.4", "dD,dA,dB", "FFF 000 000 - 0 110BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.w.2", "dD,dA,dB", "FFF 000 000 - 0 111BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.i"  , "rD,rA,iI", "FFF 000 000 - 1 11111111 AAAAA DDDDD ZZZ", 0},
+    {"name", "operand list", "FFF --- --- - - -------- ----- ----- ---", 0},
 };
 const size_t lily2_num_dis_opcodes = ARRAY_SIZE (lily2_dis_opcodes);
 
@@ -447,7 +442,7 @@ lily2_print_register (char param_ch,
 #if DEBUG
         printf ("       extract str: (nil).\n");
 #endif
-        sprintf (error, "can't disassemble register (0x%x).\n", insn);
+        sprintf (error, "can't disassemble register (0x%x).\n", register_insn);
         retval = 0;
     } else {
 #if DEBUG
@@ -490,7 +485,7 @@ lily2_print_register_pair (char param_ch,
 #if DEBUG
         printf ("       extract str: (nil).\n");
 #endif
-        sprintf (error, "can't disassemble register-pair (0x%x).\n", insn);
+        sprintf (error, "can't disassemble register-pair (0x%x).\n", register_pair_insn);
         retval = 0;
     } else {
 #if DEBUG
@@ -534,7 +529,7 @@ lily2_print_register_pair_pair (char param_ch,
 #if DEBUG
         printf ("       extract str: (nil).\n");
 #endif
-        sprintf ("can't disassemble register-pair-pair (0x%x).\n", insn);
+        sprintf ("can't disassemble register-pair-pair (0x%x).\n", register_pair_pair_insn);
         retval = 0;
     } else {
 #if DEBUG
@@ -684,7 +679,8 @@ print_insn (bfd_vma memaddr, struct disassemble_info *info)
     unsigned long insn;
     find_byte_func_type find_byte_func = (find_byte_func_type) info->private_data;
 
-    struct lily2_opcode *opcode;
+    struct lily2_opcode *opcode = NULL;
+    struct lily2_opcode *dis_opcode = lily2_dis_opcodes;
 
     int status = (*info->read_memory_func) (memaddr, (bfd_byte *) &insn_ch[0], 4, info);
 
@@ -700,17 +696,25 @@ print_insn (bfd_vma memaddr, struct disassemble_info *info)
     printf ("********************** NEW INSTRUCTION (0x%08x) *********************\n", insn);
 #endif
 
-    for (opcode = lily2_dis_opcodes;
-         opcode != lily2_dis_opcodes + lily2_num_dis_opcodes;
-         ++opcode) {
+    while (1) {
 
-        if (!lily2_opcode_match (insn, opcode->encoding)) {
-            continue;
-        } else {
+        if (opcode == NULL) {
+            opcode = lily2_opc_opcodes_a;
+        } else if (opcode == lily2_opc_opcodes_a + lily2_num_opc_opcodes_a) {
+            opcode = lily2_opc_opcodes_m;
+        } else if (opcode == lily2_opc_opcodes_m + lily2_num_opc_opcodes_m) {
+            opcode = lily2_opc_opcodes_d;
+        } else if (opcode == lily2_opc_opcodes_d + lily2_num_opc_opcodes_d) {
+            /* Can't find opcode. */
+            retval = 0;
+            break;
+        }
+
+        if (lily2_opcode_match (insn, opcode->encoding)) {
             /* Finds the matching opcode. */
 
             /* Prints the functional units. */
-            lily2_print_functional_unit ('F', opcode->encoding, insn, info);
+            lily2_print_functional_unit ('F', dis_opcode->encoding, insn, info);
 
             /* Prints the conditions. */
             lily2_print_condition ('Z', opcode->encoding, insn, info);
@@ -764,12 +768,23 @@ print_insn (bfd_vma memaddr, struct disassemble_info *info)
                         retval = 0;
                 }
             }
+
+            /* Exits. */
+            break;
         }
+
+        /* Advance iteration. */
+        ++opcode;
     }
 
     /* On success, returns the size of instruction.
        On failure, returns -1. */
-    return (retval == 0) ? -1 : 4;
+    if (retval == 0) {
+        fprintf (stderr, "%s\n", error);
+        return -1;
+    } else {
+        return 4;
+    }
 }
 
 /* Disassemble a big-endian lily2 instruction.  */
