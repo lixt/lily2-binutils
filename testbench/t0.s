@@ -1,14 +1,12 @@
-
-
-.file "t_cover.s"
+.file "t0.s"
 
 .text
 .align 4
 
-.func t_cover_a
-.type t_cover_a,@function
+.func fu_a
+.type fu_a,@function
 
-t_cover_a:
+fu_a:
 
     # OP_HI = 000
     [xa] { cf0} add x0,x1,x2
@@ -92,26 +90,26 @@ t_cover_a:
 
 
 
-.size t_cover_a,.-t_cover_a
+.size fu_a,.-fu_a
 .endfunc
 
-.func t_cover_m
-.type t_cover_m, @function
+.func fu_m
+.type fu_m, @function
 
-t_cover_m:
+fu_m:
 
 #[xx]        brr x0
 
-.size t_cover_m,.-t_cover_m
+.size fu_m,.-fu_m
 .endfunc
 
 
 
 
-.func t_cover_d
-.type t_cover_d, @function
+.func fu_d
+.type fu_d, @function
 
-t_cover_d:
+fu_d:
 
     # OP_HI = 0b'000
     [xd] { cf0} ldb x0,x1(x2)
@@ -274,5 +272,5 @@ t_cover_d:
     [xd] { cf1} smv
     [xd] { cf2} smv
 
-.size t_cover_d,.-t_cover_d
+.size fu_d,.-fu_d
 .endfunc
