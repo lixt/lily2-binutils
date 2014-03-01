@@ -58,7 +58,7 @@ const struct lily2_letter lily2_letters[] = {
     {'J', 8 , NUM_UNSIGNED},
     {'K', 5 , NUM_SIGNED  },
     {'L', 5 , NUM_UNSIGNED},
-    {'M', 16, NUM_SIGNED  },
+    {'M', 16, NUM_UNSIGNED},
     {'N', 22, NUM_SIGNED  },
     {'S', 2 , NUM_UNSIGNED},
     {'E', 1 , NUM_UNSIGNED},
@@ -113,8 +113,8 @@ const struct lily2_opcode lily2_opc_opcodes_a[] =
     {"lsl.w.2"  , "dD,dA,dB", "E 00 100 000 - 0 111BBBBB AAAAA DDDDD ZZZ", 0},
     {"lsl.i"    , "rD,rA,iL", "E 00 100 000 - 1 ---LLLLL AAAAA DDDDD ZZZ", 0},
 
-    {"mkl"      , "rD,iM"   , "E 00 101 00M M M MMMMMMMM MMMMM DDDDD ZZZ", 0},
-    {"mkh"      , "rD,iM"   , "E 00 101 01M M M MMMMMMMM MMMMM DDDDD ZZZ", 0},
+    {"mkl"      , "rD,iM"   , "E 00 101 00M M M MMMMMMMM MMMMM DDDDD ZZZ", RELOC_LO16},
+    {"mkh"      , "rD,iM"   , "E 00 101 01M M M MMMMMMMM MMMMM DDDDD ZZZ", RELOC_HI16},
 
     {"zip.b.4"  , "dD,rA,rB", "E 00 110 000 - 0 -00BBBBB AAAAA DDDDD ZZZ", 0},
     {"zip.h.2"  , "dD,rA,rB", "E 00 110 000 - 0 -01BBBBB AAAAA DDDDD ZZZ", 0},

@@ -154,6 +154,37 @@ struct lily2_consth
 static struct lily2_consth *lily2_consth_list;
 
 static bfd_reloc_status_type
+lily2_elf_const_reloc (bfd *abfd ATTRIBUTE_UNUSED,
+		       arelent *reloc_entry,
+		       asymbol *symbol,
+		       void * data,
+		       asection *input_section,
+		       bfd *output_bfd,
+		       char **error_message ATTRIBUTE_UNUSED)
+{
+    unsigned long insn, tmp;
+    unsigned long src_mask, dst_mask;
+    unsigned int bitpos, rightshift;
+    bfd_size_type addr = reloc_entry->address;
+
+    reloc_entry->address += input_section->output_offset;
+    src_mask = reloc_entry->howto->src_mask;
+    dst_mask = reloc_entry->howto->dst_mask;
+    bitpos = reloc_entry->howto->bitpos;
+    rightshift = reloc_entry->howto->rightshift;
+
+    insn = bfd_get_32 (abfd, (bfd_byte *) data + addr);
+    tmp = ((insn & dst_mask) >> bitpos) << rightshift;
+    tmp += symbol->section->output_section->vma;
+    tmp += symbol->section->output_offset;
+    tmp += symbol->value;
+    insn = (insn & ~dst_mask) | (((tmp & src_mask) >> rightshift) << bitpos);
+    bfd_put_32 (abfd, insn, (bfd_byte *) data + addr);
+
+    return bfd_reloc_ok;
+}
+
+static bfd_reloc_status_type
 lily2_elf_consth_reloc (bfd *abfd ATTRIBUTE_UNUSED,
 		       arelent *reloc_entry,
 		       asymbol *symbol,
@@ -162,49 +193,21 @@ lily2_elf_consth_reloc (bfd *abfd ATTRIBUTE_UNUSED,
 		       bfd *output_bfd,
 		       char **error_message ATTRIBUTE_UNUSED)
 {
-  bfd_reloc_status_type ret;
-  bfd_vma relocation;
-  struct lily2_consth *n;
-
-  ret = bfd_reloc_ok;
-
-  if (bfd_is_und_section (symbol->section)
-      && output_bfd == NULL)
-    ret = bfd_reloc_undefined;
-
-  if (bfd_is_com_section (symbol->section))
-    relocation = 0;
-  else
-    relocation = symbol->value;
-
-  relocation += symbol->section->output_section->vma;
-  relocation += symbol->section->output_offset;
-  relocation += reloc_entry->addend;
-
-  if (reloc_entry->address > bfd_get_section_limit (abfd, input_section))
-    return bfd_reloc_outofrange;
-
-  /* Save the information, and let LO16 do the actual relocation.  */
-  n = bfd_malloc (sizeof *n);
-  if (n == NULL)
-    return bfd_reloc_outofrange;
-  n->addr = (bfd_byte *) data + reloc_entry->address;
-  n->addend = relocation;
-  n->next = lily2_consth_list;
-  lily2_consth_list = n;
-
-  if (output_bfd != NULL)
-    reloc_entry->address += input_section->output_offset;
-
-  return ret;
+    return lily2_elf_const_reloc (abfd,
+                                  reloc_entry,
+                                  symbol,
+                                  data,
+                                  input_section,
+                                  output_bfd,
+                                  error_message);
 }
 
-/* Do a R_lily2_CONST relocation.  This is a straightforward 16 bit
+/* Do a R_LILY2_CONST relocation.  This is a straightforward 16 bit
    inplace relocation; this function exists in order to do the
-   R_lily2_CONSTH relocation described above.  */
+   R_LILY2_CONSTH relocation described above.  */
 
 static bfd_reloc_status_type
-lily2_elf_const_reloc (bfd *abfd,
+lily2_elf_constl_reloc (bfd *abfd,
 		      arelent *reloc_entry,
 		      asymbol *symbol,
 		      void * data,
@@ -212,59 +215,13 @@ lily2_elf_const_reloc (bfd *abfd,
 		      bfd *output_bfd,
 		      char **error_message)
 {
-  if (lily2_consth_list != NULL)
-    {
-      struct lily2_consth *l;
-
-      l = lily2_consth_list;
-      while (l != NULL)
-	{
-	  unsigned long insn;
-	  unsigned long val;
-          unsigned long vallo;
-	  struct lily2_consth *next;
-
-	  /* Do the HI16 relocation.  Note that we actually don't need
-	     to know anything about the LO16 itself, except where to
-	     find the low 16 bits of the addend needed by the LO16.  */
-	  insn = bfd_get_32 (abfd, l->addr);
-	  vallo = (bfd_get_32 (abfd, (bfd_byte *) data + reloc_entry->address)
-		   & 0xffff);
-	  val = ((insn & 0xffff) << 16) + vallo;
-	  val += l->addend;
-
-	  insn = (insn &~ 0xffff) | ((val >> 16) & 0xffff);
-	  bfd_put_32 (abfd, insn, l->addr);
-
-	  next = l->next;
-	  free (l);
-	  l = next;
-	}
-
-      lily2_consth_list = NULL;
-    }
-
-  if (output_bfd != NULL)
-    {
-      unsigned long insn, tmp;
-      bfd_size_type addr = reloc_entry->address;
-
-      reloc_entry->address += input_section->output_offset;
-
-      insn = bfd_get_32 (abfd, (bfd_byte *) data + addr);
-      tmp = insn & 0x0000ffff;
-      tmp += symbol->section->output_section->vma;
-      tmp += symbol->section->output_offset;
-      tmp += symbol->value;
-      insn = (insn & 0xffff0000) | (tmp & 0x0000ffff);
-      bfd_put_32 (abfd, insn, (bfd_byte *) data + addr);
-
-      return bfd_reloc_ok;
-    }
-
-  /* Now do the LO16 reloc in the usual way.  */
-  return bfd_elf_generic_reloc (abfd, reloc_entry, symbol, data,
-				input_section, output_bfd, error_message);
+    return lily2_elf_const_reloc (abfd,
+                                  reloc_entry,
+                                  symbol,
+                                  data,
+                                  input_section,
+                                  output_bfd,
+                                  error_message);
 }
 
 static bfd_reloc_status_type
@@ -358,18 +315,18 @@ static reloc_howto_type elf_lily2_howto_table[] =
 	 FALSE),                /* pcrel_offset */
 
   /* A standard low 16 bit relocation.  */
-  HOWTO (R_LILY2_CONST,		/* type */
+  HOWTO (R_LILY2_CONSTL,		/* type */
 	 0,			/* rightshift */
 	 2,			/* size (0 = byte, 1 = short, 2 = long) */
 	 16,			/* bitsize */
 	 FALSE,			/* pc_relative */
-	 0,			/* bitpos */
+	 8,			/* bitpos */
 	 complain_overflow_dont, /* complain_on_overflow */
-	 lily2_elf_const_reloc,	/* special_function */
-	 "R_LILY2_CONST",	/* name */
+	 lily2_elf_constl_reloc,	/* special_function */
+	 "R_LILY2_CONSTL",	/* name */
 	 FALSE,			/* partial_inplace */
 	 0x0000ffff,		/* src_mask */
-	 0x0000ffff,		/* dst_mask */
+	 0x00ffff00,		/* dst_mask */
 	 FALSE),		/* pcrel_offset */
 
   /* A standard high 16 bit relocation.  */
@@ -378,13 +335,13 @@ static reloc_howto_type elf_lily2_howto_table[] =
 	 2,			/* size (0 = byte, 1 = short, 2 = long) */
 	 16,			/* bitsize */
 	 TRUE,			/* pc_relative */
-	 0,			/* bitpos */
+	 8,			/* bitpos */
 	 complain_overflow_dont, /* complain_on_overflow */
 	 lily2_elf_consth_reloc,	/* special_function */
 	 "R_LILY2_CONSTH",	/* name */
 	 FALSE,			/* partial_inplace */
 	 0xffff0000,		/* src_mask */
-	 0x0000ffff,		/* dst_mask */
+	 0x00ffff00,		/* dst_mask */
 	 FALSE),		/* pcrel_offset */
 
   /* A standard branch relocation.  */
@@ -447,7 +404,7 @@ static const struct lily2_reloc_map lily2_reloc_map[] =
   { BFD_RELOC_32, R_LILY2_32 },
   { BFD_RELOC_16, R_LILY2_16 },
   { BFD_RELOC_8, R_LILY2_8 },
-  { BFD_RELOC_LO16, R_LILY2_CONST },
+  { BFD_RELOC_LO16, R_LILY2_CONSTL },
   { BFD_RELOC_HI16, R_LILY2_CONSTH },
   { BFD_RELOC_32_GOT_PCREL, R_LILY2_JUMPTARG },
   { BFD_RELOC_VTABLE_INHERIT, R_LILY2_GNU_VTINHERIT },

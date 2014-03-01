@@ -705,8 +705,8 @@ print_insn (bfd_vma memaddr, struct disassemble_info *info)
         } else if (opcode == lily2_opc_opcodes_m + lily2_num_opc_opcodes_m) {
             opcode = lily2_opc_opcodes_d;
         } else if (opcode == lily2_opc_opcodes_d + lily2_num_opc_opcodes_d) {
-            /* Can't find opcode. */
-            retval = 0;
+            /* Can't find opcode, maybe in data section, just print the machine code. */
+            (*info->fprintf_func) (info->stream, "0x%x", insn);
             break;
         }
 

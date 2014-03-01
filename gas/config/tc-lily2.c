@@ -934,6 +934,47 @@ lily2_parse_addr_mod_sign (char param_ch, char *encoding, char *str)
     return retval;
 }
 
+static int
+lily2_parse_expression (char *str)
+{
+    char *save_input_line_pointer;
+
+    save_input_line_pointer = input_line_pointer;
+    input_line_pointer = str;
+
+    segT seg = expression (&(the_insn.exp));
+
+    input_line_pointer = save_input_line_pointer;
+
+    print_expr (&(the_insn.exp));
+
+    return 1;
+}
+
+static int
+lily2_set_relocation_type (void)
+{
+    int retval = 1;
+
+    switch ((the_insn.opcode)->flag) {
+
+        case RELOC_LO16:
+            the_insn.reloc = BFD_RELOC_LO16;
+            the_insn.pcrel = 0;
+            break;
+
+        case RELOC_HI16:
+            the_insn.reloc = BFD_RELOC_HI16;
+            the_insn.pcrel = 0;
+            break;
+
+        default:
+            retval = 0;
+    }
+
+    return retval;
+}
+
 /* Extracts the string of operands from the instruction S and puts it in
    the OPERAND_STR. The string should be at the start of S and can be omitted.
    On success, the pointer to the character past the string is returned.
@@ -990,14 +1031,17 @@ lily2_extract_operand (char *operand_str, char *s, char **args,
                 ++args_ptr;
 
                 if (is_operand_label (*s)) {
-                    ;
+                    /* Labels, sets the relocation types here. */
+                    lily2_set_relocation_type ();
+                    /* Operand type of the relocation immediate is 'c'. */
+                    *operand_type = 'c';
                 } else {
-                    for (; !is_operand_separator (*s);)
-                        *operand_ptr++ = *s++;
-                    *operand_ptr = '\0';
+                    *operand_type = 'i';
                 }
-                *operand_type = 'i';
 
+                for (; !is_operand_separator (*s);)
+                    *operand_ptr++ = *s++;
+                *operand_ptr = '\0';
                 break;
 
             case '(':
@@ -1242,7 +1286,7 @@ lily2_parse_immediate (char param_ch, char *encoding, char *str)
 static int
 lily2_parse_operand (char operand_type, char param_ch, char *encoding, char *str)
 {
-    int retval;
+    int retval = 1;
 
     switch (param_ch) {
         case 'A': /* Fall through. */
@@ -1263,7 +1307,20 @@ lily2_parse_operand (char operand_type, char param_ch, char *encoding, char *str
             }
             break;
 
-        default : retval = lily2_parse_immediate (param_ch, encoding, str); break;
+        default : /* Immediate or labels. */
+            switch (operand_type) {
+
+                case 'i': /* Immediate. */
+                    retval = lily2_parse_immediate (param_ch, encoding, str); break;
+
+                case 'c': /* Labels. */
+                    retval = lily2_parse_expression (str); break;
+
+                default : /* Error cases. */
+                    retval = 0;
+                    sprintf (the_insn.error, "external error: " \
+                            "illegal operand type `%c'.\n", operand_type);
+            }
     }
 
     return retval;
@@ -1307,6 +1364,17 @@ md_assemble (char *str)
     char *toP = frag_more (4);
     md_number_to_chars (toP, the_insn.insn, 4);
 
+    /* Put out the symbol-dependent stuff.  */
+    if (the_insn.reloc != BFD_RELOC_NONE)
+    {
+        fix_new_exp (frag_now,
+                     (toP - frag_now->fr_literal + the_insn.reloc_offset),
+                     4,   /* size */
+                     &the_insn.exp,
+                     the_insn.pcrel,
+                     the_insn.reloc);
+    }
+
     return;
 }
 
@@ -1332,7 +1400,7 @@ static void
 remove_reserved_bit (char *s)
 {
     for (;*s ;++s) {
-        if (*s == '-') *s = '0';
+        if (*s == '-' || ISALPHA (*s)) *s = '0';
     }
 }
 
@@ -1397,6 +1465,7 @@ machine_ip (char *str)
 
     /* Until here, we gets the encoding and args. */
     memset (&the_insn, 0, sizeof (the_insn));
+    the_insn.opcode = opcode;
     the_insn.cluster = cluster;
     the_insn.reloc = BFD_RELOC_NONE;
 
@@ -1406,7 +1475,7 @@ machine_ip (char *str)
     /* Deals with the address modification signs. */
     char addr_mod_sign_str[extract_str_len];
     if (retval) {
-        if (opcode->flag == ADDR_MOD) {
+        if (the_insn.opcode->flag == ADDR_MOD) {
             s = lily2_extract_addr_mod_sign (addr_mod_sign_str, s);
             if (s) {
                 remove_addr_mod_sign (s);
@@ -1518,20 +1587,20 @@ md_apply_fix (fixS * fixP, valueT * val, segT seg ATTRIBUTE_UNUSED)
       buf[0] = t_val;
       break;
 
-    case BFD_RELOC_LO16:      /* 0000XXXX pattern in a word.  */
+    case BFD_RELOC_LO16:      /* 00XXXX00 pattern in a word.  */
 #if DEBUG
       printf ("reloc_const: val=%x\n", t_val);
 #endif
-      buf[2] = t_val >> 8;  /* Holds bits 0000XXXX.  */
-      buf[3] = t_val;
+      buf[1] = t_val >> 8;  /* Holds bits 0000XXXX.  */
+      buf[2] = t_val;
       break;
 
-    case BFD_RELOC_HI16:    /* 0000XXXX pattern in a word.  */
+    case BFD_RELOC_HI16:    /* 00XXXX00 pattern in a word.  */
 #if DEBUG
       printf ("reloc_consth: val=%x\n", t_val);
 #endif
-      buf[2] = t_val >> 24; /* Holds bits XXXX0000.  */
-      buf[3] = t_val >> 16;
+      buf[1] = t_val >> 24; /* Holds bits XXXX0000.  */
+      buf[2] = t_val >> 16;
       break;
 
     case BFD_RELOC_32_GOT_PCREL:  /* 0000XXXX pattern in a word.  */
@@ -1656,7 +1725,7 @@ tc_aout_fix_to_chars (char *where,
 }
 
 #endif /* OBJ_AOUT */
-
+
 const char *md_shortopts = "";
 
 struct option md_longopts[] =

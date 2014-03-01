@@ -33,7 +33,9 @@
 #define BASE_10 (10)
 #define BASE_16 (16)
 
-#define ADDR_MOD (1)
+#define RELOC_LO16 (1)
+#define RELOC_HI16 (2)
+#define ADDR_MOD   (3)
 
 /* Attributes of encoding letters. */
 struct lily2_letter
