@@ -69,25 +69,131 @@ const size_t lily2_num_letters = ARRAY_SIZE (lily2_letters);
 
 const struct lily2_opcode lily2_opc_opcodes_a[] =
 {
-    {"add"      , "rD,rA,rB", "E 00 000 000 - 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.b.4"  , "rD,rA,rB", "E 00 000 000 - 0 100BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.h.2"  , "rD,rA,rB", "E 00 000 000 - 0 101BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.h.4"  , "dD,dA,dB", "E 00 000 000 - 0 110BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.w.2"  , "dD,dA,dB", "E 00 000 000 - 0 111BBBBB AAAAA DDDDD ZZZ", 0},
-    {"add.i"    , "rD,rA,iI", "E 00 000 000 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    /* FU (0b'00) + OPH (0b'000). */
+    {"add"      , "rD,rA,rB", "E 00 000 000 1 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.b.4"  , "rD,rA,rB", "E 00 000 000 1 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.h.2"  , "rD,rA,rB", "E 00 000 000 1 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.h.4"  , "dD,dA,dB", "E 00 000 000 1 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.w.2"  , "dD,dA,dB", "E 00 000 000 1 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"add.i"    , "rD,rA,iI", "E 00 000 000 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
 
-    {"and"      , "rD,rA,rB", "E 00 001 000 - 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
-    {"and.b.4"  , "rD,rA,rB", "E 00 001 000 - 0 100BBBBB AAAAA DDDDD ZZZ", 0},
-    {"and.h.2"  , "rD,rA,rB", "E 00 001 000 - 0 101BBBBB AAAAA DDDDD ZZZ", 0},
-    {"and.h.4"  , "dD,dA,dB", "E 00 001 000 - 0 110BBBBB AAAAA DDDDD ZZZ", 0},
-    {"and.w.2"  , "dD,dA,dB", "E 00 001 000 - 0 111BBBBB AAAAA DDDDD ZZZ", 0},
-    {"and.i"    , "rD,rA,iI", "E 00 001 000 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"adc"      , "rD,rA,rB", "E 00 000 001 1 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"adc.i"    , "rD,rA,iI", "E 00 000 001 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
 
+    {"sub"      , "rD,rA,rB", "E 00 000 010 1 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sub.b.4"  , "rD,rA,rB", "E 00 000 010 1 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sub.h.2"  , "rD,rA,rB", "E 00 000 010 1 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sub.h.4"  , "dD,dA,dB", "E 00 000 010 1 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sub.w.2"  , "dD,dA,dB", "E 00 000 010 1 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sub.i"    , "rD,rA,iI", "E 00 000 010 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"sbc"      , "rD,rA,rB", "E 00 000 011 1 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sbc.i"    , "rD,rA,iI", "E 00 000 011 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"rsb"      , "rD,rA,rB", "E 00 000 100 1 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsb.b.4"  , "rD,rA,rB", "E 00 000 100 1 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsb.h.2"  , "rD,rA,rB", "E 00 000 100 1 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsb.h.4"  , "dD,dA,dB", "E 00 000 100 1 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsb.w.2"  , "dD,dA,dB", "E 00 000 100 1 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsb.i"    , "rD,rA,iI", "E 00 000 100 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"rsc"      , "rD,rA,rB", "E 00 000 101 1 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsc.i"    , "rD,rA,iI", "E 00 000 101 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"abs"      , "rD,rA"   , "E 00 000 111 1 0 0--00000 AAAAA DDDDD ZZZ", 0},
+    {"abs.b.4"  , "rD,rA"   , "E 00 000 111 1 0 10000000 AAAAA DDDDD ZZZ", 0},
+    {"abs.h.2"  , "rD,rA"   , "E 00 000 111 1 0 10100000 AAAAA DDDDD ZZZ", 0},
+    {"abs.h.4"  , "dD,dA"   , "E 00 000 111 1 0 11000000 AAAAA DDDDD ZZZ", 0},
+    {"abs.w.2"  , "dD,dA"   , "E 00 000 111 1 0 11100000 AAAAA DDDDD ZZZ", 0},
+
+    {"neg"      , "rD,rA"   , "E 00 000 111 1 0 0--00001 AAAAA DDDDD ZZZ", 0},
+    {"neg.b.4"  , "rD,rA"   , "E 00 000 111 1 0 10000001 AAAAA DDDDD ZZZ", 0},
+    {"neg.h.2"  , "rD,rA"   , "E 00 000 111 1 0 10100001 AAAAA DDDDD ZZZ", 0},
+    {"neg.h.4"  , "dD,dA"   , "E 00 000 111 1 0 11000001 AAAAA DDDDD ZZZ", 0},
+    {"neg.w.2"  , "dD,dA"   , "E 00 000 111 1 0 11100001 AAAAA DDDDD ZZZ", 0},
+
+    {"sxb"      , "rD,rA"   , "E 00 000 111 1 0 0--00010 AAAAA DDDDD ZZZ", 0},
+    {"sxh"      , "rD,rA"   , "E 00 000 111 1 0 0--00011 AAAAA DDDDD ZZZ", 0},
+    {"zxb"      , "rD,rA"   , "E 00 000 111 1 0 0--00100 AAAAA DDDDD ZZZ", 0},
+    {"zxh"      , "rD,rA"   , "E 00 000 111 1 0 0--00101 AAAAA DDDDD ZZZ", 0},
+
+    /* FU (0b'00) + OPH (0b'001). */
+    {"and"      , "rD,rA,rB", "E 00 001 000 0 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"and.b.4"  , "rD,rA,rB", "E 00 001 000 0 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"and.h.2"  , "rD,rA,rB", "E 00 001 000 0 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"and.h.4"  , "dD,dA,dB", "E 00 001 000 0 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"and.w.2"  , "dD,dA,dB", "E 00 001 000 0 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"and.i"    , "rD,rA,iI", "E 00 001 000 0 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"nad"      , "rD,rA,rB", "E 00 001 001 0 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nad.b.4"  , "rD,rA,rB", "E 00 001 001 0 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nad.h.2"  , "rD,rA,rB", "E 00 001 001 0 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nad.h.4"  , "dD,dA,dB", "E 00 001 001 0 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nad.w.2"  , "dD,dA,dB", "E 00 001 001 0 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nad.i"    , "rD,rA,iI", "E 00 001 001 0 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"orr"      , "rD,rA,rB", "E 00 001 010 0 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"orr.b.4"  , "rD,rA,rB", "E 00 001 010 0 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"orr.h.2"  , "rD,rA,rB", "E 00 001 010 0 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"orr.h.4"  , "dD,dA,dB", "E 00 001 010 0 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"orr.w.2"  , "dD,dA,dB", "E 00 001 010 0 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"orr.i"    , "rD,rA,iI", "E 00 001 010 0 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"nor"      , "rD,rA,rB", "E 00 001 011 0 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nor.b.4"  , "rD,rA,rB", "E 00 001 011 0 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nor.h.2"  , "rD,rA,rB", "E 00 001 011 0 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nor.h.4"  , "dD,dA,dB", "E 00 001 011 0 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nor.w.2"  , "dD,dA,dB", "E 00 001 011 0 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nor.i"    , "rD,rA,iI", "E 00 001 011 0 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"xor"      , "rD,rA,rB", "E 00 001 100 0 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"xor.b.4"  , "rD,rA,rB", "E 00 001 100 0 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"xor.h.2"  , "rD,rA,rB", "E 00 001 100 0 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"xor.h.4"  , "dD,dA,dB", "E 00 001 100 0 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"xor.w.2"  , "dD,dA,dB", "E 00 001 100 0 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"xor.i"    , "rD,rA,iI", "E 00 001 100 0 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"nxr"      , "rD,rA,rB", "E 00 001 101 0 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nxr.b.4"  , "rD,rA,rB", "E 00 001 101 0 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nxr.h.2"  , "rD,rA,rB", "E 00 001 101 0 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nxr.h.4"  , "dD,dA,dB", "E 00 001 101 0 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nxr.w.2"  , "dD,dA,dB", "E 00 001 101 0 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"nxr.i"    , "rD,rA,iI", "E 00 001 101 0 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"not"      , "rD,rA"   , "E 00 001 111 0 0 0--00000 AAAAA DDDDD ZZZ", 0},
+    {"not.b.4"  , "rD,rA"   , "E 00 001 111 0 0 10000000 AAAAA DDDDD ZZZ", 0},
+    {"not.h.2"  , "rD,rA"   , "E 00 001 111 0 0 10100000 AAAAA DDDDD ZZZ", 0},
+    {"not.h.4"  , "dD,dA"   , "E 00 001 111 0 0 11000000 AAAAA DDDDD ZZZ", 0},
+    {"not.w.2"  , "dD,dA"   , "E 00 001 111 0 0 11100000 AAAAA DDDDD ZZZ", 0},
+
+    /* FU (0b'00) + OPH (0b'010). */
     {"tgt"      , "rD,rA,rB", "E 00 010 000 1 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
     {"tgt.i"    , "rD,rA,iI", "E 00 010 000 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
     {"tgt.u"    , "rD,rA,rB", "E 00 010 000 0 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
     {"tgt.u.i"  , "rD,rA,iJ", "E 00 010 000 0 1 JJJJJJJJ AAAAA DDDDD ZZZ", 0},
 
+    {"tge"      , "rD,rA,rB", "E 00 010 001 1 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"tge.i"    , "rD,rA,iI", "E 00 010 001 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"tge.u"    , "rD,rA,rB", "E 00 010 001 0 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"tge.u.i"  , "rD,rA,iJ", "E 00 010 001 0 1 JJJJJJJJ AAAAA DDDDD ZZZ", 0},
+
+    {"tlt"      , "rD,rA,rB", "E 00 010 010 1 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"tlt.i"    , "rD,rA,iI", "E 00 010 010 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"tlt.u"    , "rD,rA,rB", "E 00 010 010 0 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"tlt.u.i"  , "rD,rA,iJ", "E 00 010 010 0 1 JJJJJJJJ AAAAA DDDDD ZZZ", 0},
+
+    {"tle"      , "rD,rA,rB", "E 00 010 011 1 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"tle.i"    , "rD,rA,iI", "E 00 010 011 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"tle.u"    , "rD,rA,rB", "E 00 010 011 0 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"tle.u.i"  , "rD,rA,iJ", "E 00 010 011 0 1 JJJJJJJJ AAAAA DDDDD ZZZ", 0},
+
+    {"teq"      , "rD,rA,rB", "E 00 010 100 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"teq.i"    , "rD,rA,iI", "E 00 010 100 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"tne"      , "rD,rA,rB", "E 00 010 101 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"tne.i"    , "rD,rA,iI", "E 00 010 101 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    /* FU (0b'00) + OPH (0b'011). */
     {"gto.b.4"  , "rD,rA,rB", "E 00 011 000 1 - 000BBBBB AAAAA DDDDD ZZZ", 0},
     {"gto.h.2"  , "rD,rA,rB", "E 00 011 000 1 - 001BBBBB AAAAA DDDDD ZZZ", 0},
     {"gto.h.4"  , "dD,dA,dB", "E 00 011 000 1 - 010BBBBB AAAAA DDDDD ZZZ", 0},
@@ -105,7 +211,76 @@ const struct lily2_opcode lily2_opc_opcodes_a[] =
     {"gta.u.h.4", "dD,dA,dB", "E 00 011 000 0 - 110BBBBB AAAAA DDDDD ZZZ", 0},
     {"gta.u.w.2", "dD,dA,dB", "E 00 011 000 0 - 111BBBBB AAAAA DDDDD ZZZ", 0},
 
+    {"geo.b.4"  , "rD,rA,rB", "E 00 011 001 1 - 000BBBBB AAAAA DDDDD ZZZ", 0},
+    {"geo.h.2"  , "rD,rA,rB", "E 00 011 001 1 - 001BBBBB AAAAA DDDDD ZZZ", 0},
+    {"geo.h.4"  , "dD,dA,dB", "E 00 011 001 1 - 010BBBBB AAAAA DDDDD ZZZ", 0},
+    {"geo.w.2"  , "dD,dA,dB", "E 00 011 001 1 - 011BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gea.b.4"  , "rD,rA,rB", "E 00 011 001 1 - 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gea.h.2"  , "rD,rA,rB", "E 00 011 001 1 - 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gea.h.4"  , "dD,dA,dB", "E 00 011 001 1 - 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gea.w.2"  , "dD,dA,dB", "E 00 011 001 1 - 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"geo.u.b.4", "rD,rA,rB", "E 00 011 001 0 - 000BBBBB AAAAA DDDDD ZZZ", 0},
+    {"geo.u.h.2", "rD,rA,rB", "E 00 011 001 0 - 001BBBBB AAAAA DDDDD ZZZ", 0},
+    {"geo.u.h.4", "dD,dA,dB", "E 00 011 001 0 - 010BBBBB AAAAA DDDDD ZZZ", 0},
+    {"geo.u.w.2", "dD,dA,dB", "E 00 011 001 0 - 011BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gea.u.b.4", "rD,rA,rB", "E 00 011 001 0 - 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gea.u.h.2", "rD,rA,rB", "E 00 011 001 0 - 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gea.u.h.4", "dD,dA,dB", "E 00 011 001 0 - 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gea.u.w.2", "dD,dA,dB", "E 00 011 001 0 - 111BBBBB AAAAA DDDDD ZZZ", 0},
 
+    {"lto.b.4"  , "rD,rA,rB", "E 00 011 010 1 - 000BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lto.h.2"  , "rD,rA,rB", "E 00 011 010 1 - 001BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lto.h.4"  , "dD,dA,dB", "E 00 011 010 1 - 010BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lto.w.2"  , "dD,dA,dB", "E 00 011 010 1 - 011BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lta.b.4"  , "rD,rA,rB", "E 00 011 010 1 - 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lta.h.2"  , "rD,rA,rB", "E 00 011 010 1 - 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lta.h.4"  , "dD,dA,dB", "E 00 011 010 1 - 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lta.w.2"  , "dD,dA,dB", "E 00 011 010 1 - 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lto.u.b.4", "rD,rA,rB", "E 00 011 010 0 - 000BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lto.u.h.2", "rD,rA,rB", "E 00 011 010 0 - 001BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lto.u.h.4", "dD,dA,dB", "E 00 011 010 0 - 010BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lto.u.w.2", "dD,dA,dB", "E 00 011 010 0 - 011BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lta.u.b.4", "rD,rA,rB", "E 00 011 010 0 - 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lta.u.h.2", "rD,rA,rB", "E 00 011 010 0 - 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lta.u.h.4", "dD,dA,dB", "E 00 011 010 0 - 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lta.u.w.2", "dD,dA,dB", "E 00 011 010 0 - 111BBBBB AAAAA DDDDD ZZZ", 0},
+
+    {"leo.b.4"  , "rD,rA,rB", "E 00 011 011 1 - 000BBBBB AAAAA DDDDD ZZZ", 0},
+    {"leo.h.2"  , "rD,rA,rB", "E 00 011 011 1 - 001BBBBB AAAAA DDDDD ZZZ", 0},
+    {"leo.h.4"  , "dD,dA,dB", "E 00 011 011 1 - 010BBBBB AAAAA DDDDD ZZZ", 0},
+    {"leo.w.2"  , "dD,dA,dB", "E 00 011 011 1 - 011BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lea.b.4"  , "rD,rA,rB", "E 00 011 011 1 - 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lea.h.2"  , "rD,rA,rB", "E 00 011 011 1 - 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lea.h.4"  , "dD,dA,dB", "E 00 011 011 1 - 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lea.w.2"  , "dD,dA,dB", "E 00 011 011 1 - 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"leo.u.b.4", "rD,rA,rB", "E 00 011 011 0 - 000BBBBB AAAAA DDDDD ZZZ", 0},
+    {"leo.u.h.2", "rD,rA,rB", "E 00 011 011 0 - 001BBBBB AAAAA DDDDD ZZZ", 0},
+    {"leo.u.h.4", "dD,dA,dB", "E 00 011 011 0 - 010BBBBB AAAAA DDDDD ZZZ", 0},
+    {"leo.u.w.2", "dD,dA,dB", "E 00 011 011 0 - 011BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lea.u.b.4", "rD,rA,rB", "E 00 011 011 0 - 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lea.u.h.2", "rD,rA,rB", "E 00 011 011 0 - 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lea.u.h.4", "dD,dA,dB", "E 00 011 011 0 - 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lea.u.w.2", "dD,dA,dB", "E 00 011 011 0 - 111BBBBB AAAAA DDDDD ZZZ", 0},
+
+    {"gto.b.4"  , "rD,rA,rB", "E 00 011 100 - - 000BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gto.h.2"  , "rD,rA,rB", "E 00 011 100 - - 001BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gto.h.4"  , "dD,dA,dB", "E 00 011 100 - - 010BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gto.w.2"  , "dD,dA,dB", "E 00 011 100 - - 011BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gta.b.4"  , "rD,rA,rB", "E 00 011 100 - - 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gta.h.2"  , "rD,rA,rB", "E 00 011 100 - - 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gta.h.4"  , "dD,dA,dB", "E 00 011 100 - - 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gta.w.2"  , "dD,dA,dB", "E 00 011 100 - - 111BBBBB AAAAA DDDDD ZZZ", 0},
+
+    {"geo.b.4"  , "rD,rA,rB", "E 00 011 101 - - 000BBBBB AAAAA DDDDD ZZZ", 0},
+    {"geo.h.2"  , "rD,rA,rB", "E 00 011 101 - - 001BBBBB AAAAA DDDDD ZZZ", 0},
+    {"geo.h.4"  , "dD,dA,dB", "E 00 011 101 - - 010BBBBB AAAAA DDDDD ZZZ", 0},
+    {"geo.w.2"  , "dD,dA,dB", "E 00 011 101 - - 011BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gea.b.4"  , "rD,rA,rB", "E 00 011 101 - - 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gea.h.2"  , "rD,rA,rB", "E 00 011 101 - - 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gea.h.4"  , "dD,dA,dB", "E 00 011 101 - - 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"gea.w.2"  , "dD,dA,dB", "E 00 011 101 - - 111BBBBB AAAAA DDDDD ZZZ", 0},
+
+    /* FU (0b'00) + OPH (0b'100). */
     {"lsl"      , "rD,rA,rB", "E 00 100 000 - 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
     {"lsl.b.4"  , "rD,rA,rB", "E 00 100 000 - 0 100BBBBB AAAAA DDDDD ZZZ", 0},
     {"lsl.h.2"  , "rD,rA,rB", "E 00 100 000 - 0 101BBBBB AAAAA DDDDD ZZZ", 0},
@@ -113,13 +288,65 @@ const struct lily2_opcode lily2_opc_opcodes_a[] =
     {"lsl.w.2"  , "dD,dA,dB", "E 00 100 000 - 0 111BBBBB AAAAA DDDDD ZZZ", 0},
     {"lsl.i"    , "rD,rA,iL", "E 00 100 000 - 1 ---LLLLL AAAAA DDDDD ZZZ", 0},
 
+    {"lsr"      , "rD,rA,rB", "E 00 100 001 - 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lsr.b.4"  , "rD,rA,rB", "E 00 100 001 - 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lsr.h.2"  , "rD,rA,rB", "E 00 100 001 - 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lsr.h.4"  , "dD,dA,dB", "E 00 100 001 - 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lsr.w.2"  , "dD,dA,dB", "E 00 100 001 - 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"lsr.i"    , "rD,rA,iL", "E 00 100 001 - 1 ---LLLLL AAAAA DDDDD ZZZ", 0},
+
+    {"asr"      , "rD,rA,rB", "E 00 100 010 - 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"asr.b.4"  , "rD,rA,rB", "E 00 100 010 - 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"asr.h.2"  , "rD,rA,rB", "E 00 100 010 - 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"asr.h.4"  , "dD,dA,dB", "E 00 100 010 - 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"asr.w.2"  , "dD,dA,dB", "E 00 100 010 - 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"asr.i"    , "rD,rA,iL", "E 00 100 010 - 1 ---LLLLL AAAAA DDDDD ZZZ", 0},
+
+    {"rsr"      , "rD,rA,rB", "E 00 100 011 - 0 0--BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsr.b.4"  , "rD,rA,rB", "E 00 100 011 - 0 100BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsr.h.2"  , "rD,rA,rB", "E 00 100 011 - 0 101BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsr.h.4"  , "dD,dA,dB", "E 00 100 011 - 0 110BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsr.w.2"  , "dD,dA,dB", "E 00 100 011 - 0 111BBBBB AAAAA DDDDD ZZZ", 0},
+    {"rsr.i"    , "rD,rA,iL", "E 00 100 011 - 1 ---LLLLL AAAAA DDDDD ZZZ", 0},
+
+    /* FU (0b'00) + OPH (0b'101). */
     {"mkl"      , "rD,iM"   , "E 00 101 00M M M MMMMMMMM MMMMM DDDDD ZZZ", RELOC_LO16},
     {"mkh"      , "rD,iM"   , "E 00 101 01M M M MMMMMMMM MMMMM DDDDD ZZZ", RELOC_HI16},
 
-    {"zip.b.4"  , "dD,rA,rB", "E 00 110 000 - 0 -00BBBBB AAAAA DDDDD ZZZ", 0},
-    {"zip.h.2"  , "dD,rA,rB", "E 00 110 000 - 0 -01BBBBB AAAAA DDDDD ZZZ", 0},
-    {"zip.h.4"  , "qD,dA,dB", "E 00 110 000 - 0 -10BBBBB AAAAA DDDDD ZZZ", 0},
-    {"zip.w.2"  , "qD,dA,dB", "E 00 110 000 - 0 -11BBBBB AAAAA DDDDD ZZZ", 0},
+    {"mrw"      , "rD,rA"   , "E 00 101 111 - - ---00000 AAAAA DDDDD ZZZ", 0},
+    {"srw"      , "rD,rA"   , "E 00 101 111 - - ---00001 AAAAA DDDDD ZZZ", 0},
+    {"mrd"      , "dD,dA"   , "E 00 101 111 - - ---00010 AAAAA DDDDD ZZZ", 0},
+    {"srd"      , "dD,dA"   , "E 00 101 111 - - ---00011 AAAAA DDDDD ZZZ", 0},
+    {"maw"      , "rX,rA"   , "E 00 101 111 - - ---00100 AAAAA DDDDD ZZZ", 0},
+    {"saw"      , "rX,rA"   , "E 00 101 111 - - ---00101 AAAAA DDDDD ZZZ", 0},
+    {"mad"      , "dX,dA"   , "E 00 101 111 - - ---00110 AAAAA DDDDD ZZZ", 0},
+    {"sad"      , "dX,dA"   , "E 00 101 111 - - ---00111 AAAAA DDDDD ZZZ", 0},
+    {"mcw"      , "rD,rC"   , "E 00 101 111 - - ---01010 AAAAA DDDDD ZZZ", 0},
+    {"scw"      , "rD,rC"   , "E 00 101 111 - - ---01011 AAAAA DDDDD ZZZ", 0},
+
+    /* FU (0b'00) + OPH (0b'110). */
+    {"zip.b.4"  , "dD,rA,rB", "E 00 110 000 - - -00BBBBB AAAAA DDDDD ZZZ", 0},
+    {"zip.h.2"  , "dD,rA,rB", "E 00 110 000 - - -01BBBBB AAAAA DDDDD ZZZ", 0},
+
+    {"uzp.b.4"  , "dD,rA,rB", "E 00 110 001 - - -00BBBBB AAAAA DDDDD ZZZ", 0},
+    {"uzp.h.2"  , "dD,rA,rB", "E 00 110 001 - - -01BBBBB AAAAA DDDDD ZZZ", 0},
+
+    {"uct.b.4"  , "rD,rA,iH", "E 00 110 010 - - -00---HH AAAAA DDDDD ZZZ", 0},
+    {"uct.h.2"  , "rD,rA,iG", "E 00 110 010 - - -01----G AAAAA DDDDD ZZZ", 0},
+
+    {"mct.b.4"  , "rD,rA,iH", "E 00 110 011 - - -00---HH AAAAA DDDDD ZZZ", 0},
+    {"mct.h.2"  , "rD,rA,iG", "E 00 110 011 - - -01----G AAAAA DDDDD ZZZ", 0},
+
+    {"swp.b.4"  , "rD,rA"   , "E 00 110 111 - - -0000000 AAAAA DDDDD ZZZ", 0},
+    {"swp.h.2"  , "rD,rA"   , "E 00 110 111 - - -0100000 AAAAA DDDDD ZZZ", 0},
+
+    {"rvs.b.4"  , "rD,rA"   , "E 00 110 111 - - -0011111 AAAAA DDDDD ZZZ", 0},
+    {"rvs.h.2"  , "rD,rA"   , "E 00 110 111 - - -0111111 AAAAA DDDDD ZZZ", 0},
+
+
+
+
+
 
     {"add.sp"   , "rD,rA,rB", "E 01 000 000 - - 00-BBBBB AAAAA DDDDD ZZZ", 0},
     {"add.dp"   , "dD,dA,dB", "E 01 000 000 - - 01-BBBBB AAAAA DDDDD ZZZ", 0},
