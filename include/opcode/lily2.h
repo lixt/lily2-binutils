@@ -72,6 +72,7 @@ struct lily2_opcode
        iL   An immediate operand, range 0 to 31.
        iM   An immediate operand, range 0 to 65535.
        iN   An immediate operand, range -1048576 to 1048575.
+       iP   An immediate operand, range 0 to 1023.
        *    Address modification prefix operator.
        #    Address modification suffix operator.
        */
@@ -92,6 +93,7 @@ struct lily2_opcode
        L   An immediate operand, range 0 to 31.
        M   An immediate operand, range 0 to 65535.
        N   An immediate operand, range -1048576 to 1048575.
+       P   An immediate operand, range 0 to 1023.
        S   Address modification prefix or suffix operator(S stands for *).
        E   Cluster bitfield(used in gas).
        F   Functional unit bitfield(used in dis).

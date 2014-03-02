@@ -60,6 +60,7 @@ const struct lily2_letter lily2_letters[] = {
     {'L', 5 , NUM_UNSIGNED},
     {'M', 16, NUM_UNSIGNED},
     {'N', 22, NUM_SIGNED  },
+    {'P', 10, NUM_UNSIGNED},
     {'S', 2 , NUM_UNSIGNED},
     {'E', 1 , NUM_UNSIGNED},
     {'F', 2 , NUM_UNSIGNED},
@@ -343,11 +344,6 @@ const struct lily2_opcode lily2_opc_opcodes_a[] =
     {"rvs.b.4"  , "rD,rA"   , "E 00 110 111 - - -0011111 AAAAA DDDDD ZZZ", 0},
     {"rvs.h.2"  , "rD,rA"   , "E 00 110 111 - - -0111111 AAAAA DDDDD ZZZ", 0},
 
-
-
-
-
-
     {"add.sp"   , "rD,rA,rB", "E 01 000 000 - - 00-BBBBB AAAAA DDDDD ZZZ", 0},
     {"add.dp"   , "dD,dA,dB", "E 01 000 000 - - 01-BBBBB AAAAA DDDDD ZZZ", 0},
     {"add.sp.2" , "dD,dA,dB", "E 01 000 000 - - 10-BBBBB AAAAA DDDDD ZZZ", 0},
@@ -401,25 +397,182 @@ const size_t lily2_num_opc_opcodes_m = ARRAY_SIZE (lily2_opc_opcodes_m);
 
 const struct lily2_opcode lily2_opc_opcodes_d[] =
 {
+    /* FU (0b'11) + OPH (0b'000). */
     {"ldb"       , "rD,rB(rA)"  , "E 11 000 000 1 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
     {"ldb.i"     , "rD,iI(rA)"  , "E 11 000 000 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
     {"ldb.u"     , "rD,rB(rA)"  , "E 11 000 000 0 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
     {"ldb.u.i"   , "rD,iI(rA)"  , "E 11 000 000 0 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
 
+    {"ldh"       , "rD,rB(rA)"  , "E 11 000 001 1 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldh.i"     , "rD,iI(rA)"  , "E 11 000 001 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"ldh.u"     , "rD,rB(rA)"  , "E 11 000 001 0 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldh.u.i"   , "rD,iI(rA)"  , "E 11 000 001 0 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"ldw"       , "rD,rB(rA)"  , "E 11 000 010 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldw.i"     , "rD,iI(rA)"  , "E 11 000 010 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"ldd"       , "dD,rB(rA)"  , "E 11 000 011 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldd.i"     , "dD,iI(rA)"  , "E 11 000 011 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"stb"       , "rB(rA),rD"  , "E 11 000 100 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"stb.i"     , "iI(rA),rD"  , "E 11 000 100 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"sth"       , "rB(rA),rD"  , "E 11 000 101 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sth.i"     , "iI(rA),rD"  , "E 11 000 101 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"stw"       , "rB(rA),rD"  , "E 11 000 110 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"stw.i"     , "iI(rA),rD"  , "E 11 000 110 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"std"       , "rB(rA),dD"  , "E 11 000 111 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"std.i"     , "iI(rA),dD"  , "E 11 000 111 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    /* FU (0b'11) + OPH (0b'001). */
     {"ldb.ds"    , "rD,rB(rA)"  , "E 11 001 000 1 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
     {"ldb.ds.i"  , "rD,iI(rA)"  , "E 11 001 000 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
     {"ldb.ds.u"  , "rD,rB(rA)"  , "E 11 001 000 0 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
     {"ldb.ds.u.i", "rD,iI(rA)"  , "E 11 001 000 0 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
 
-    {"ldm"       , "rD,rB(*rA#)", "E 11 010 000 1 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
-    {"ldm.i"     , "rD,iK(*rA#)", "E 11 010 000 1 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
-    {"ldm.u"     , "rD,rB(*rA#)", "E 11 010 000 0 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
-    {"ldm.u.i"   , "rD,iK(*rA#)", "E 11 010 000 0 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+    {"ldh.ds"    , "rD,rB(rA)"  , "E 11 001 001 1 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldh.ds.i"  , "rD,iI(rA)"  , "E 11 001 001 1 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+    {"ldh.ds.u"  , "rD,rB(rA)"  , "E 11 001 001 0 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldh.ds.u.i", "rD,iI(rA)"  , "E 11 001 001 0 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
 
-    {"ldm.ds"    , "rD,rB(*rA#)", "E 11 010 000 1 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
-    {"ldm.ds.i"  , "rD,iK(*rA#)", "E 11 010 000 1 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
-    {"ldm.ds.u"  , "rD,rB(*rA#)", "E 11 010 000 0 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
-    {"ldm.ds.u.i", "rD,iK(*rA#)", "E 11 010 000 0 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+    {"ldw.ds"    , "rD,rB(rA)"  , "E 11 001 010 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldw.ds.i"  , "rD,iI(rA)"  , "E 11 001 010 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"ldd.ds"    , "dD,rB(rA)"  , "E 11 001 011 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldd.ds.i"  , "dD,iI(rA)"  , "E 11 001 011 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"stb.ds"    , "rB(rA),rD"  , "E 11 001 100 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"stb.ds.i"  , "iI(rA),rD"  , "E 11 001 100 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"sth.ds"    , "rB(rA),rD"  , "E 11 001 101 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"sth.ds.i"  , "iI(rA),rD"  , "E 11 001 101 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"stw.ds"    , "rB(rA),rD"  , "E 11 001 110 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"stw.ds.i"  , "iI(rA),rD"  , "E 11 001 110 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    {"std.ds"    , "rB(rA),dD"  , "E 11 001 111 - 0 ---BBBBB AAAAA DDDDD ZZZ", 0},
+    {"std.ds.i"  , "iI(rA),dD"  , "E 11 001 111 - 1 IIIIIIII AAAAA DDDDD ZZZ", 0},
+
+    /* FU (0b'11) + OPH (0b'010). */
+    {"lbm"       , "rD,rB(*rA#)", "E 11 010 000 1 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"lbm.i"     , "rD,iK(*rA#)", "E 11 010 000 1 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+    {"lbm.u"     , "rD,rB(*rA#)", "E 11 010 000 0 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"lbm.u.i"   , "rD,iK(*rA#)", "E 11 010 000 0 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"lhm"       , "rD,rB(*rA#)", "E 11 010 001 1 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"lhm.i"     , "rD,iK(*rA#)", "E 11 010 001 1 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+    {"lhm.u"     , "rD,rB(*rA#)", "E 11 010 001 0 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"lhm.u.i"   , "rD,iK(*rA#)", "E 11 010 001 0 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"lwm"       , "rD,rB(*rA#)", "E 11 010 010 - 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"lwm.i"     , "rD,iK(*rA#)", "E 11 010 010 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"ldm"       , "dD,rB(*rA#)", "E 11 010 011 - 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldm.i"     , "dD,iK(*rA#)", "E 11 010 011 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"sbm"       , "rB(*rA#),rD", "E 11 010 100 - 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"sbm.i"     , "iK(*rA#),rD", "E 11 010 100 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"shm"       , "rB(*rA#),rD", "E 11 010 101 - 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"shm.i"     , "iK(*rA#),rD", "E 11 010 101 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"swm"       , "rB(*rA#),rD", "E 11 010 110 - 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"swm.i"     , "iK(*rA#),rD", "E 11 010 110 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"sdm"       , "rB(*rA#),dD", "E 11 010 111 - 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"sdm.i"     , "iK(*rA#),dD", "E 11 010 111 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    /* FU (0b'11) + OPH (0b'011). */
+    {"lbm.ds"    , "rD,rB(*rA#)", "E 11 011 000 1 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"lbm.ds.i"  , "rD,iK(*rA#)", "E 11 011 000 1 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+    {"lbm.ds.u"  , "rD,rB(*rA#)", "E 11 011 000 0 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"lbm.ds.u.i", "rD,iK(*rA#)", "E 11 011 000 0 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"lhm.ds"    , "rD,rB(*rA#)", "E 11 011 001 1 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"lhm.ds.i"  , "rD,iK(*rA#)", "E 11 011 001 1 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+    {"lhm.ds.u"  , "rD,rB(*rA#)", "E 11 011 001 0 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"lhm.ds.u.i", "rD,iK(*rA#)", "E 11 011 001 0 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"lwm.ds"    , "rD,rB(*rA#)", "E 11 011 010 - 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"lwm.ds.i"  , "rD,iK(*rA#)", "E 11 011 010 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"ldm.ds"    , "dD,rB(*rA#)", "E 11 011 011 - 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"ldm.ds.i"  , "dD,iK(*rA#)", "E 11 011 011 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"stm.ds"    , "rB(*rA#),rD", "E 11 011 100 - 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"stm.ds.i"  , "iK(*rA#),rD", "E 11 011 100 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"stm.ds"    , "rB(*rA#),rD", "E 11 011 101 - 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"stm.ds.i"  , "iK(*rA#),rD", "E 11 011 101 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"stm.ds"    , "rB(*rA#),rD", "E 11 011 110 - 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"stm.ds.i"  , "iK(*rA#),rD", "E 11 011 110 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    {"stm.ds"    , "rB(*rA#),dD", "E 11 011 111 - 0 -SSBBBBB AAAAA DDDDD ZZZ", 0},
+    {"stm.ds.i"  , "iK(*rA#),dD", "E 11 011 111 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
+
+    /* FU (0b'11) + OPH (0b'100). */
+    {"bri"       , "iN"         , "E 11 100 00N N N NNNNNNNN NNNNN NNNNN ZZZ", 0},
+    {"bil"       , "iN"         , "E 11 100 01N N N NNNNNNNN NNNNN NNNNN ZZZ", 0},
+
+    {"brr"       , "rA"         , "E 11 100 100 - - -------- AAAAA ----- ZZZ", 0},
+
+    {"ret"       , ""           , "E 11 100 101 - - ---00000 ----- ----- ZZZ", 0},
+    {"irt"       , ""           , "E 11 100 101 - - ---00001 ----- ----- ZZZ", 0},
+
+    {"brl"       , "rA"         , "E 11 100 110 - - -------- AAAAA ----- ZZZ", 0},
+
+    {"nop"       , ""           , "E 11 100 111 - - ---00000 ----- ----- ZZZ", 0},
+    {"smr"       , ""           , "E 11 100 111 - - ---00001 ----- ----- ZZZ", 0},
+    {"smv"       , ""           , "E 11 100 111 - - ---00010 ----- ----- ZZZ", 0},
+    {"sys"       , "iP"         , "E 11 100 111 - - ---00011 PPPPP PPPPP ZZZ", 0},
+
+    /* FU (0b'11) + OPH (0b'101). */
+    {"bri.ds"    , "iN"         , "E 11 101 00N N N NNNNNNNN NNNNN NNNNN ZZZ", 0},
+    {"bil.ds"    , "iN"         , "E 11 101 01N N N NNNNNNNN NNNNN NNNNN ZZZ", 0},
+
+    {"brr.ds"    , "rA"         , "E 11 101 100 - - -------- AAAAA ----- ZZZ", 0},
+
+    {"ret.ds"    , ""           , "E 11 101 101 - - ---00000 ----- ----- ZZZ", 0},
+    {"irt.ds"    , ""           , "E 11 101 101 - - ---00001 ----- ----- ZZZ", 0},
+
+    {"brl.ds"    , "rA"         , "E 11 101 110 - - -------- AAAAA ----- ZZZ", 0},
+
+    /* FU (0b'11) + OPH (0b'110). */
+    {"mkl"      , "rD,iM"   , "E 11 110 00M M M MMMMMMMM MMMMM DDDDD ZZZ", RELOC_LO16},
+    {"mkh"      , "rD,iM"   , "E 11 110 01M M M MMMMMMMM MMMMM DDDDD ZZZ", RELOC_HI16},
+
+    {"mrw"      , "rD,rA"   , "E 11 110 111 - - ---00000 AAAAA DDDDD ZZZ", 0},
+    {"srw"      , "rD,rA"   , "E 11 110 111 - - ---00001 AAAAA DDDDD ZZZ", 0},
+    {"mrd"      , "dD,dA"   , "E 11 110 111 - - ---00010 AAAAA DDDDD ZZZ", 0},
+    {"srd"      , "dD,dA"   , "E 11 110 111 - - ---00011 AAAAA DDDDD ZZZ", 0},
+    {"maw"      , "rX,rA"   , "E 11 110 111 - - ---00100 AAAAA DDDDD ZZZ", 0},
+    {"saw"      , "rX,rA"   , "E 11 110 111 - - ---00101 AAAAA DDDDD ZZZ", 0},
+    {"mad"      , "dX,dA"   , "E 11 110 111 - - ---00110 AAAAA DDDDD ZZZ", 0},
+    {"sad"      , "dX,dA"   , "E 11 110 111 - - ---00111 AAAAA DDDDD ZZZ", 0},
+    {"mcw"      , "rD,rC"   , "E 11 110 111 - - ---01010 AAAAA DDDDD ZZZ", 0},
+    {"scw"      , "rD,rC"   , "E 11 110 111 - - ---01011 AAAAA DDDDD ZZZ", 0},
+
+    /* FU (0b'11) + OPH (0b'111). */
+    {"zip.b.4"  , "dD,rA,rB", "E 11 111 000 - - -00BBBBB AAAAA DDDDD ZZZ", 0},
+    {"zip.h.2"  , "dD,rA,rB", "E 11 111 000 - - -01BBBBB AAAAA DDDDD ZZZ", 0},
+
+    {"uzp.b.4"  , "dD,rA,rB", "E 11 111 001 - - -00BBBBB AAAAA DDDDD ZZZ", 0},
+    {"uzp.h.2"  , "dD,rA,rB", "E 11 111 001 - - -01BBBBB AAAAA DDDDD ZZZ", 0},
+
+    {"uct.b.4"  , "rD,rA,iH", "E 11 111 010 - - -00---HH AAAAA DDDDD ZZZ", 0},
+    {"uct.h.2"  , "rD,rA,iG", "E 11 111 010 - - -01----G AAAAA DDDDD ZZZ", 0},
+
+    {"mct.b.4"  , "rD,rA,iH", "E 11 111 011 - - -00---HH AAAAA DDDDD ZZZ", 0},
+    {"mct.h.2"  , "rD,rA,iG", "E 11 111 011 - - -01----G AAAAA DDDDD ZZZ", 0},
+
+    {"swp.b.4"  , "rD,rA"   , "E 11 111 111 - - -0000000 AAAAA DDDDD ZZZ", 0},
+    {"swp.h.2"  , "rD,rA"   , "E 11 111 111 - - -0100000 AAAAA DDDDD ZZZ", 0},
+
+    {"rvs.b.4"  , "rD,rA"   , "E 11 111 111 - - -0011111 AAAAA DDDDD ZZZ", 0},
+    {"rvs.h.2"  , "rD,rA"   , "E 11 111 111 - - -0111111 AAAAA DDDDD ZZZ", 0},
 };
 const size_t lily2_num_opc_opcodes_d = ARRAY_SIZE (lily2_opc_opcodes_d);
 
