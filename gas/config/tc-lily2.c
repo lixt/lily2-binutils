@@ -521,14 +521,10 @@ remove_whitespace (char *s)
     if (t) free (t);
 }
 
-int hex2bin (char *str)
+void hex2bin (char *str)
 {
     char *hex = str;
-    char *bin = (char *) malloc (4 * strlen (hex));
-    if (!bin) {
-        fprintf (stderr, "internal error: malloc error in function ``hex2bin''.");
-        as_fatal (_("Broken assembler. Assemble abort."));
-    }
+    char bin[32];
     char *s = bin;
 
     for (; *hex; ++hex) {
@@ -552,34 +548,19 @@ int hex2bin (char *str)
             case 'f': *s++ = '1'; *s++ = '1'; *s++ = '1'; *s++ = '1'; break;
         }
     }
+
     *s = '\0';
-
-    int bin_count;
-    for (bin_count = 0; *bin && *bin == '0'; ++bin) {
-        ++bin_count;
-        *bin = ' ';
-    }
-    bin_count = 4 * strlen (str) - bin_count;
-
-    remove_whitespace (bin);
     strcpy (str, bin);
-
-    return bin_count;
 }
 
 /* Converts an integer VALUE to a terminated string using the specific BASE
    and stores the result in the array given by STR parameter. On success the
    total number of characters written is returned. On failure, a negative
-   number is returned. Supported BASE: 2,8,10,16. */
-int itoa (int value, char *str, int base)
+   number is returned. Supported BASE: 2. */
+void itoa (int value, char *str, int base)
 {
-    switch (base) {
-        case 2 : sprintf (str, "%x", value);
-                 return hex2bin (str);
-        case 8 : return sprintf (str, "%o", value);
-        case 10: return sprintf (str, "%d", value);
-        case 16: return sprintf (str, "%x", value);
-    }
+    sprintf (str, "%08x", value);
+    hex2bin (str);
 }
 
 static int
@@ -601,27 +582,17 @@ lily2_encode (char param_ch, char *encoding, unsigned long insn)
                  "external error: insn of letter `%c' is overflowed(0x%x).\n",
                  param_ch, insn);
     } else {
-        char insn_str[64];
-        char *insn_ptr = insn_str;
-        int insn_str_len = 0;
+        /* One more for '\0'. */
+        char insn_str[33];
 
         /* Converts the value of INSN into a string. */
-        insn_str_len = itoa (insn, insn_str, BASE_2);
+        itoa (insn, insn_str, BASE_2);
 
-        if (insn_str_len < 0) {
-            /* The conversion is failure or the INSN string is illegal. */
-            retval = 0;
-            sprintf (the_insn.error,
-                     "internal error: insn(0x%x) is illegal.\n", insn);
+        char *insn_ptr = insn_str + 32 - letter->len;
 
-        } else {
-            /* Replaces the corresponding characters in encoding with
-               the INSN string. */
-            int diff_len = letter->len - insn_str_len;
-            for (; *encoding; ++encoding) {
-                if (*encoding == param_ch) {
-                    *encoding = (diff_len-- > 0) ? '0' : *insn_ptr++;
-                }
+        for (; *encoding; ++encoding) {
+            if (*encoding == param_ch) {
+                *encoding = *insn_ptr++;
             }
         }
     }

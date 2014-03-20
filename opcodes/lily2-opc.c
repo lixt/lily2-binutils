@@ -762,6 +762,10 @@ const struct lily2_register lily2_opc_registers_x[] =
 
     {"g0" , 24}, {"g1" , 25}, {"g2" , 26}, {"g3" , 27},
     {"g4" , 28}, {"g5" , 29}, {"g6" , 30}, {"g7" , 31},
+
+    /* Semantically meaningful registers. */
+    {"xc" , 0 },
+    {"gc" , 24}, {"ra" , 29}, {"fp" , 30}, {"sp" , 31},
 };
 const size_t lily2_num_opc_registers_x = ARRAY_SIZE (lily2_opc_registers_x);
 
@@ -781,6 +785,10 @@ const struct lily2_register lily2_opc_registers_y[] =
 
     {"g0" , 24}, {"g1" , 25}, {"g2" , 26}, {"g3" , 27},
     {"g4" , 28}, {"g5" , 29}, {"g6" , 30}, {"g7" , 31},
+
+    /* Semantically meaningful registers. */
+    {"yc" , 0 },
+    {"gc" , 24}, {"ra" , 29}, {"fp" , 30}, {"sp" , 31},
 };
 const size_t lily2_num_opc_registers_y = ARRAY_SIZE (lily2_opc_registers_y);
 
