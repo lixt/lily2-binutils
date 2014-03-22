@@ -347,6 +347,9 @@ const struct lily2_opcode lily2_opc_opcodes_a[] =
     {"add.sp"   , "rD,rA,rB", "E 01 000 000 - - 00-BBBBB AAAAA DDDDD ZZZ", 0},
     {"add.dp"   , "dD,dA,dB", "E 01 000 000 - - 01-BBBBB AAAAA DDDDD ZZZ", 0},
     {"add.sp.2" , "dD,dA,dB", "E 01 000 000 - - 10-BBBBB AAAAA DDDDD ZZZ", 0},
+    {"neg.sp"   , "rD,rA,rB", "E 01 000 111 - - 00-00001 AAAAA DDDDD ZZZ", 0},
+    {"neg.dp"   , "dD,dA,dB", "E 01 000 111 - - 01-00001 AAAAA DDDDD ZZZ", 0},
+    {"neg.sp.2" , "dD,dA,dB", "E 01 000 111 - - 10-00001 AAAAA DDDDD ZZZ", 0},
 
     {"tgt.sp"   , "rD,rA,rB", "E 01 010 000 - - 00-BBBBB AAAAA DDDDD ZZZ", 0},
     {"tgt.dp"   , "dD,dA,dB", "E 01 010 000 - - 01-BBBBB AAAAA DDDDD ZZZ", 0},
@@ -521,16 +524,21 @@ const struct lily2_opcode lily2_opc_opcodes_m[] =
     {"neg.h.4"  , "dD,dA"   , "E 10 010 111 1 0 11000001 AAAAA DDDDD ZZZ", 0},
     {"neg.w.2"  , "dD,dA"   , "E 10 010 111 1 0 11100001 AAAAA DDDDD ZZZ", 0},
 
-    {"sxb"      , "rD,rA"   , "E 10 000 111 1 0 0--00010 AAAAA DDDDD ZZZ", 0},
-    {"sxh"      , "rD,rA"   , "E 10 000 111 1 0 0--00011 AAAAA DDDDD ZZZ", 0},
-    {"zxb"      , "rD,rA"   , "E 10 000 111 1 0 0--00100 AAAAA DDDDD ZZZ", 0},
-    {"zxh"      , "rD,rA"   , "E 10 000 111 1 0 0--00101 AAAAA DDDDD ZZZ", 0},
+    {"sxb"      , "rD,rA"   , "E 10 010 111 1 0 0--00010 AAAAA DDDDD ZZZ", 0},
+    {"sxh"      , "rD,rA"   , "E 10 010 111 1 0 0--00011 AAAAA DDDDD ZZZ", 0},
+    {"zxb"      , "rD,rA"   , "E 10 010 111 1 0 0--00100 AAAAA DDDDD ZZZ", 0},
+    {"zxh"      , "rD,rA"   , "E 10 010 111 1 0 0--00101 AAAAA DDDDD ZZZ", 0},
 
     {"mul.sp"   , "rD,rA,rB", "E 10 100 000 - - 00-BBBBB AAAAA DDDDD ZZZ", 0},
     {"mul.dp"   , "dD,dA,dB", "E 10 100 000 - - 01-BBBBB AAAAA DDDDD ZZZ", 0},
     {"mul.sp.2" , "dD,dA,dB", "E 10 100 000 - - 10-BBBBB AAAAA DDDDD ZZZ", 0},
+    {"div.sp"   , "rD,rA,rB", "E 10 100 110 - - 00-BBBBB AAAAA DDDDD ZZZ", 0},
+    {"div.dp"   , "dD,dA,dB", "E 10 100 110 - - 01-BBBBB AAAAA DDDDD ZZZ", 0},
+    {"div.sp.2" , "dD,dA,dB", "E 10 100 110 - - 10-BBBBB AAAAA DDDDD ZZZ", 0},
 
     {"cmu.csp"  , "dD,dA,dB", "E 10 101 000 - - 00-BBBBB AAAAA DDDDD ZZZ", 0},
+
+    {"dmu.sp.2" , "rD,dA,dB", "E 10 101 100 - - 00-BBBBB AAAAA DDDDD ZZZ", 0},
 
     {"add.sp"   , "rD,rA,rB", "E 10 110 000 - - 00-BBBBB AAAAA DDDDD ZZZ", 0},
     {"add.dp"   , "dD,dA,dB", "E 10 110 000 - - 01-BBBBB AAAAA DDDDD ZZZ", 0},
@@ -657,8 +665,8 @@ const struct lily2_opcode lily2_opc_opcodes_d[] =
     {"stm.ds.i"  , "iK(*rA#),dD", "E 11 011 111 - 1 -SSKKKKK AAAAA DDDDD ZZZ", 0},
 
     /* FU (0b'11) + OPH (0b'100). */
-    {"bri"       , "iN"         , "E 11 100 00N N N NNNNNNNN NNNNN NNNNN ZZZ", 0},
-    {"bil"       , "iN"         , "E 11 100 01N N N NNNNNNNN NNNNN NNNNN ZZZ", 0},
+    {"bri"       , "iN"         , "E 11 100 00N N N NNNNNNNN NNNNN NNNNN ZZZ", RELOC_32_GOT_PCREL},
+    {"bil"       , "iN"         , "E 11 100 01N N N NNNNNNNN NNNNN NNNNN ZZZ", RELOC_32_GOT_PCREL},
 
     {"brr"       , "rA"         , "E 11 100 100 - - -------- AAAAA ----- ZZZ", 0},
 
@@ -673,8 +681,8 @@ const struct lily2_opcode lily2_opc_opcodes_d[] =
     {"sys"       , "iP"         , "E 11 100 111 - - ---00011 PPPPP PPPPP ZZZ", 0},
 
     /* FU (0b'11) + OPH (0b'101). */
-    {"bri.ds"    , "iN"         , "E 11 101 00N N N NNNNNNNN NNNNN NNNNN ZZZ", 0},
-    {"bil.ds"    , "iN"         , "E 11 101 01N N N NNNNNNNN NNNNN NNNNN ZZZ", 0},
+    {"bri.ds"    , "iN"         , "E 11 101 00N N N NNNNNNNN NNNNN NNNNN ZZZ", RELOC_32_GOT_PCREL},
+    {"bil.ds"    , "iN"         , "E 11 101 01N N N NNNNNNNN NNNNN NNNNN ZZZ", RELOC_32_GOT_PCREL},
 
     {"brr.ds"    , "rA"         , "E 11 101 100 - - -------- AAAAA ----- ZZZ", 0},
 
@@ -735,13 +743,13 @@ const size_t lily2_num_opc_functional_units = ARRAY_SIZE (lily2_opc_functional_u
 
 const struct lily2_condition lily2_opc_conditions[] =
 {
-    {"\0"       , 0x0},
-    {"{cf0}"    , 0x1},
-    {"{cf1}"    , 0x2},
-    {"{cf2}"    , 0x3},
-    {"{!cf0}"   , 0x4},
-    {"{!cf1}"   , 0x5},
-    {"{!cf2}"   , 0x6},
+    {"\0"      , 0x0},
+    {"{gc}"    , 0x1},
+    {"{xc}"    , 0x2},
+    {"{yc}"    , 0x3},
+    {"{!gc}"   , 0x4},
+    {"{!xc}"   , 0x5},
+    {"{!yc}"   , 0x6},
 };
 const size_t lily2_num_opc_conditions = ARRAY_SIZE (lily2_opc_conditions);
 

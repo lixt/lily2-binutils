@@ -28,7 +28,7 @@
 #include "opcode/lily2.h"
 #include "elf/lily2.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 #ifndef REGISTER_PREFIX
 #define REGISTER_PREFIX   '%'
@@ -917,8 +917,6 @@ lily2_parse_expression (char *str)
 
     input_line_pointer = save_input_line_pointer;
 
-    print_expr (&(the_insn.exp));
-
     return 1;
 }
 
@@ -938,6 +936,10 @@ lily2_set_relocation_type (void)
             the_insn.reloc = BFD_RELOC_HI16;
             the_insn.pcrel = 0;
             break;
+
+        case RELOC_32_GOT_PCREL:
+            the_insn.reloc = BFD_RELOC_32_GOT_PCREL;
+            the_insn.pcrel = 1;
 
         default:
             retval = 0;
@@ -1427,6 +1429,9 @@ machine_ip (char *str)
                 strcpy (encoding, opcode->encoding);
                 args = opcode->args;
             } else {
+                fprintf (stderr, "external error: " \
+                    "Illegal instruction name ``%s''.\n", name_str);
+                as_fatal (_("Broken assembler. Assemble abort."));
                 retval = 0;
             }
         } else {
@@ -1574,12 +1579,12 @@ md_apply_fix (fixS * fixP, valueT * val, segT seg ATTRIBUTE_UNUSED)
       buf[2] = t_val >> 16;
       break;
 
-    case BFD_RELOC_32_GOT_PCREL:  /* 0000XXXX pattern in a word.  */
+    case BFD_RELOC_32_GOT_PCREL:  /* bit 23-bit 3 in a word.  */
       if (!fixP->fx_done)
         ;
       else if (fixP->fx_pcrel)
         {
-          long v = t_val >> 28;
+          long v = t_val >> 21;
 
           if (v != 0 && v != -1)
             as_bad_where (fixP->fx_file, fixP->fx_line,
@@ -1589,10 +1594,10 @@ md_apply_fix (fixS * fixP, valueT * val, segT seg ATTRIBUTE_UNUSED)
         /* This case was supposed to be handled in machine_ip.  */
         abort ();
 
-      buf[0] |= (t_val >> 26) & 0x03; /* Holds bits 0FFFFFFC of address.  */
-      buf[1] = t_val >> 18;
-      buf[2] = t_val >> 10;
-      buf[3] = t_val >> 2;
+      buf[1] = t_val >> 15;
+      buf[2] = t_val >> 7;
+      buf[3] = (buf[3] & 0x07) | ((t_val << 1) & 0xf8);
+
       break;
 
     case BFD_RELOC_VTABLE_INHERIT:

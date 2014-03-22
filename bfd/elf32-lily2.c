@@ -26,6 +26,8 @@
 #include "elf/lily2.h"
 #include "libiberty.h"
 
+# define DEBUG 0
+
 /* Try to minimize the amount of space occupied by relocation tables
    on the ROM (not that the ROM won't be swamped by other ELF overhead).  */
 #define USE_REL	1
@@ -49,209 +51,6 @@ lily2_elf_final_write_processing (bfd *abfd,
   elf_elfheader (abfd)->e_flags &=~ EF_LILY2_MACH;
 }
 
-static bfd_reloc_status_type
-lily2_elf_32_reloc (bfd *abfd,
-		   arelent *reloc_entry,
-		   asymbol *symbol,
-		   void * data,
-		   asection *input_section,
-		   bfd *output_bfd,
-		   char **error_message ATTRIBUTE_UNUSED)
-{
-  if (output_bfd != NULL)
-    {
-      unsigned long insn;
-      bfd_size_type addr = reloc_entry->address;
-
-      reloc_entry->address += input_section->output_offset;
-
-      insn = bfd_get_32 (abfd, (bfd_byte *) data + addr);
-      insn += symbol->section->output_section->vma;
-      insn += symbol->section->output_offset;
-      insn += symbol->value;
-      bfd_put_32 (abfd, insn, (bfd_byte *) data + addr);
-
-      return bfd_reloc_ok;
-    }
-
-  return bfd_reloc_continue;
-}
-
-static bfd_reloc_status_type
-lily2_elf_16_reloc (bfd *abfd,
-		   arelent *reloc_entry,
-		   asymbol *symbol,
-		   void * data,
-		   asection *input_section,
-		   bfd *output_bfd,
-		   char **error_message ATTRIBUTE_UNUSED)
-{
-  if (output_bfd != NULL)
-    {
-      unsigned short insn;
-      bfd_size_type addr = reloc_entry->address;
-
-      reloc_entry->address += input_section->output_offset;
-
-      insn = bfd_get_16 (abfd, (bfd_byte *) data + addr);
-      insn += symbol->section->output_section->vma;
-      insn += symbol->section->output_offset;
-      insn += symbol->value;
-      bfd_put_16 (abfd, insn, (bfd_byte *) data + addr);
-
-      return bfd_reloc_ok;
-    }
-
-  return bfd_reloc_continue;
-}
-
-static bfd_reloc_status_type
-lily2_elf_8_reloc (bfd *abfd ATTRIBUTE_UNUSED,
-		  arelent *reloc_entry,
-		  asymbol *symbol,
-		  void * data,
-		  asection *input_section,
-		  bfd *output_bfd,
-		  char **error_message ATTRIBUTE_UNUSED)
-{
-  if (output_bfd != NULL)
-    {
-      unsigned char insn;
-      bfd_size_type addr = reloc_entry->address;
-
-      reloc_entry->address += input_section->output_offset;
-
-      insn = bfd_get_8 (abfd, (bfd_byte *) data + addr);
-      insn += symbol->section->output_section->vma;
-      insn += symbol->section->output_offset;
-      insn += symbol->value;
-      bfd_put_8 (abfd, insn, (bfd_byte *) data + addr);
-
-      return bfd_reloc_ok;
-    }
-
-  return bfd_reloc_continue;
-}
-
-/* Do a R_lily2_CONSTH relocation.  This has to be done in combination
-   with a R_lily2_CONST reloc, because there is a carry from the LO16 to
-   the HI16.  Here we just save the information we need; we do the
-   actual relocation when we see the LO16.  lily2 ELF requires that the
-   LO16 immediately follow the HI16.  As a GNU extension, we permit an
-   arbitrary number of HI16 relocs to be associated with a single LO16
-   reloc.  This extension permits gcc to output the HI and LO relocs
-   itself. This code is copied from the elf32-mips.c.  */
-
-struct lily2_consth
-{
-  struct lily2_consth *next;
-  bfd_byte *addr;
-  bfd_vma addend;
-};
-
-/* FIXME: This should not be a static variable.  */
-
-static struct lily2_consth *lily2_consth_list;
-
-static bfd_reloc_status_type
-lily2_elf_const_reloc (bfd *abfd ATTRIBUTE_UNUSED,
-		       arelent *reloc_entry,
-		       asymbol *symbol,
-		       void * data,
-		       asection *input_section,
-		       bfd *output_bfd,
-		       char **error_message ATTRIBUTE_UNUSED)
-{
-    unsigned long insn, tmp;
-    unsigned long src_mask, dst_mask;
-    unsigned int bitpos, rightshift;
-    bfd_size_type addr = reloc_entry->address;
-
-    reloc_entry->address += input_section->output_offset;
-    src_mask = reloc_entry->howto->src_mask;
-    dst_mask = reloc_entry->howto->dst_mask;
-    bitpos = reloc_entry->howto->bitpos;
-    rightshift = reloc_entry->howto->rightshift;
-
-    insn = bfd_get_32 (abfd, (bfd_byte *) data + addr);
-    tmp = ((insn & dst_mask) >> bitpos) << rightshift;
-    tmp += symbol->section->output_section->vma;
-    tmp += symbol->section->output_offset;
-    tmp += symbol->value;
-    insn = (insn & ~dst_mask) | (((tmp & src_mask) >> rightshift) << bitpos);
-    bfd_put_32 (abfd, insn, (bfd_byte *) data + addr);
-
-    return bfd_reloc_ok;
-}
-
-static bfd_reloc_status_type
-lily2_elf_consth_reloc (bfd *abfd ATTRIBUTE_UNUSED,
-		       arelent *reloc_entry,
-		       asymbol *symbol,
-		       void * data,
-		       asection *input_section,
-		       bfd *output_bfd,
-		       char **error_message ATTRIBUTE_UNUSED)
-{
-    return lily2_elf_const_reloc (abfd,
-                                  reloc_entry,
-                                  symbol,
-                                  data,
-                                  input_section,
-                                  output_bfd,
-                                  error_message);
-}
-
-/* Do a R_LILY2_CONST relocation.  This is a straightforward 16 bit
-   inplace relocation; this function exists in order to do the
-   R_LILY2_CONSTH relocation described above.  */
-
-static bfd_reloc_status_type
-lily2_elf_constl_reloc (bfd *abfd,
-		      arelent *reloc_entry,
-		      asymbol *symbol,
-		      void * data,
-		      asection *input_section,
-		      bfd *output_bfd,
-		      char **error_message)
-{
-    return lily2_elf_const_reloc (abfd,
-                                  reloc_entry,
-                                  symbol,
-                                  data,
-                                  input_section,
-                                  output_bfd,
-                                  error_message);
-}
-
-static bfd_reloc_status_type
-lily2_elf_jumptarg_reloc (bfd *abfd,
-			 arelent *reloc_entry,
-			 asymbol *symbol ATTRIBUTE_UNUSED,
-			 void * data,
-			 asection *input_section,
-			 bfd *output_bfd,
-			 char **error_message ATTRIBUTE_UNUSED)
-{
-  if (output_bfd != NULL)
-    {
-      unsigned long insn, tmp;
-      bfd_size_type addr = reloc_entry->address;
-
-      reloc_entry->address += input_section->output_offset;
-
-      insn = bfd_get_32 (abfd, (bfd_byte *) data + addr);
-      tmp = insn | 0xfc000000;
-      tmp -= (input_section->output_offset >> 2);
-      insn = (insn & 0xfc000000) | (tmp & 0x03ffffff);
-      bfd_put_32 (abfd, insn, (bfd_byte *) data + addr);
-
-      return bfd_reloc_ok;
-    }
-
-  return bfd_reloc_continue;
-}
-
 static reloc_howto_type elf_lily2_howto_table[] =
 {
   /* This reloc does nothing.  */
@@ -269,51 +68,6 @@ static reloc_howto_type elf_lily2_howto_table[] =
 	 0,			/* dst_mask */
 	 FALSE),		/* pcrel_offset */
 
-  /* A standard 32 bit relocation.  */
-  HOWTO (R_LILY2_32,		/* type */
-	 0,	                /* rightshift */
-	 2,	                /* size (0 = byte, 1 = short, 2 = long) */
-	 32,	                /* bitsize */
-	 FALSE,	                /* pc_relative */
-	 0,	                /* bitpos */
-	 complain_overflow_bitfield, /* complain_on_overflow */
-	 lily2_elf_32_reloc, 	/* special_function */
-	 "R_LILY2_32",		/* name */
-	 FALSE,	                /* partial_inplace */
-	 0xffffffff,	        /* src_mask */
-	 0xffffffff,   		/* dst_mask */
-	 FALSE),                /* pcrel_offset */
-
-  /* A standard 16 bit relocation.  */
-  HOWTO (R_LILY2_16,		/* type */
-	 0,	                /* rightshift */
-	 1,	                /* size (0 = byte, 1 = short, 2 = long) */
-	 16,	                /* bitsize */
-	 FALSE,	                /* pc_relative */
-	 0,	                /* bitpos */
-	 complain_overflow_bitfield, /* complain_on_overflow */
-	 lily2_elf_16_reloc, 	/* special_function */
-	 "R_LILY2_16",		/* name */
-	 FALSE,	                /* partial_inplace */
-	 0x0000ffff,	        /* src_mask */
-	 0x0000ffff,   		/* dst_mask */
-	 FALSE),                /* pcrel_offset */
-
-  /* A standard 8 bit relocation.  */
-  HOWTO (R_LILY2_8,		/* type */
-	 0,	                /* rightshift */
-	 0,	                /* size (0 = byte, 1 = short, 2 = long) */
-	 8,	                /* bitsize */
-	 FALSE,	                /* pc_relative */
-	 0,	                /* bitpos */
-	 complain_overflow_bitfield, /* complain_on_overflow */
-	 lily2_elf_8_reloc, 	/* special_function */
-	 "R_LILY2_8",		/* name */
-	 FALSE,	                /* partial_inplace */
-	 0x000000ff,	        /* src_mask */
-	 0x000000ff,   		/* dst_mask */
-	 FALSE),                /* pcrel_offset */
-
   /* A standard low 16 bit relocation.  */
   HOWTO (R_LILY2_CONSTL,		/* type */
 	 0,			/* rightshift */
@@ -322,7 +76,7 @@ static reloc_howto_type elf_lily2_howto_table[] =
 	 FALSE,			/* pc_relative */
 	 8,			/* bitpos */
 	 complain_overflow_dont, /* complain_on_overflow */
-	 lily2_elf_constl_reloc,	/* special_function */
+	 bfd_elf_generic_reloc,	/* special_function */
 	 "R_LILY2_CONSTL",	/* name */
 	 FALSE,			/* partial_inplace */
 	 0x0000ffff,		/* src_mask */
@@ -334,10 +88,10 @@ static reloc_howto_type elf_lily2_howto_table[] =
 	 16,			/* rightshift */
 	 2,			/* size (0 = byte, 1 = short, 2 = long) */
 	 16,			/* bitsize */
-	 TRUE,			/* pc_relative */
+	 FALSE,			/* pc_relative */
 	 8,			/* bitpos */
 	 complain_overflow_dont, /* complain_on_overflow */
-	 lily2_elf_consth_reloc,	/* special_function */
+	 bfd_elf_generic_reloc,	/* special_function */
 	 "R_LILY2_CONSTH",	/* name */
 	 FALSE,			/* partial_inplace */
 	 0xffff0000,		/* src_mask */
@@ -348,47 +102,180 @@ static reloc_howto_type elf_lily2_howto_table[] =
   HOWTO (R_LILY2_JUMPTARG,	/* type */
 	 2,			/* rightshift */
 	 2,			/* size (0 = byte, 1 = short, 2 = long) */
-	 28,			/* bitsize */
+	 21,			/* bitsize */
 	 TRUE,			/* pc_relative */
-	 0,			/* bitpos */
+	 3,			/* bitpos */
 	 complain_overflow_signed, /* complain_on_overflow */
-	 lily2_elf_jumptarg_reloc,/* special_function */
+	 bfd_elf_generic_reloc,/* special_function */
 	 "R_LILY2_JUMPTARG",	/* name */
 	 FALSE,			/* partial_inplace */
-	 0,			/* src_mask */
-	 0x03ffffff,		/* dst_mask */
+	 0xffffffff,		/* src_mask */
+	 0x00fffff8,		/* dst_mask */
 	 TRUE), 		/* pcrel_offset */
-
-  /* GNU extension to record C++ vtable hierarchy.  */
-  HOWTO (R_LILY2_GNU_VTINHERIT, /* type */
-         0,                     /* rightshift */
-         2,                     /* size (0 = byte, 1 = short, 2 = long) */
-         0,                     /* bitsize */
-         FALSE,                 /* pc_relative */
-         0,                     /* bitpos */
-         complain_overflow_dont, /* complain_on_overflow */
-         NULL,                  /* special_function */
-         "R_LILY2_GNU_VTINHERIT", /* name */
-         FALSE,                 /* partial_inplace */
-         0,                     /* src_mask */
-         0,                     /* dst_mask */
-         FALSE),                /* pcrel_offset */
-
-  /* GNU extension to record C++ vtable member usage.  */
-  HOWTO (R_LILY2_GNU_VTENTRY,     /* type */
-         0,                     /* rightshift */
-         2,                     /* size (0 = byte, 1 = short, 2 = long) */
-         0,                     /* bitsize */
-         FALSE,                 /* pc_relative */
-         0,                     /* bitpos */
-         complain_overflow_dont, /* complain_on_overflow */
-         _bfd_elf_rel_vtable_reloc_fn,  /* special_function */
-         "R_LILY2_GNU_VTENTRY",   /* name */
-         FALSE,                 /* partial_inplace */
-         0,                     /* src_mask */
-         0,                     /* dst_mask */
-         FALSE),                /* pcrel_offset */
 };
+
+static unsigned long
+mask (int nbits)
+{
+    int insn_bits = sizeof (unsigned long) * 8;
+    return (nbits == insn_bits) ? (unsigned long) -1 : (1 << nbits) - 1;
+}
+
+static unsigned long
+bits (unsigned long insn, int first, int last)
+{
+    int nbits = first - last + 1;
+    return (insn >> last) & mask (nbits);
+}
+
+static unsigned long
+sign_extend (unsigned long insn, int nbits, int sign)
+{
+    if (sign) { /* Signed. */
+        if (bits (insn, nbits - 1, nbits - 1)) {
+            return insn | ~mask (nbits);
+        } else {
+            return insn & mask (nbits);
+        }
+    } else { /* Unsigned. */
+        return insn & mask (nbits);
+    }
+}
+
+static unsigned long
+replace_bits (unsigned long old_insn, int first, int last, unsigned long new_insn)
+{
+    unsigned long bmask = mask (first - last + 1) << last;
+    return ((new_insn << last) & bmask) | (old_insn & ~bmask);
+}
+
+static bfd_reloc_status_type
+lily2_elf_final_link_relocate (reloc_howto_type *howto,
+			                   bfd *input_bfd,
+			                   asection *input_section,
+			                   bfd_byte *contents,
+			                   Elf_Internal_Rela *rel,
+			                   bfd_vma relocation)
+{
+#if DEBUG
+    printf ("<----- Enter function (lily2_elf_final_link_relocate).\n");
+    printf ("       vma: 0x%08lx\n", input_section->output_section->vma);
+    printf ("       inst (section offset to vma: 0x%08lx, inst offset to section: 0x%08lx)\n",
+            input_section->output_offset, rel->r_offset);
+    printf ("       label (relocation: 0x%08lx)\n", relocation);
+#endif
+
+    unsigned long insn;
+    unsigned long tmp;
+    unsigned int bitsize;
+    unsigned int bitpos;
+    unsigned int rightshift;
+
+    bfd_reloc_status_type r = bfd_reloc_ok;
+
+    contents += rel->r_offset;
+    insn = bfd_get_32 (input_bfd, contents);
+
+    bitsize = howto->bitsize;
+    bitpos = howto->bitpos;
+    rightshift = howto->rightshift;
+
+    switch (howto->type) {
+
+        case R_LILY2_CONSTL:
+        case R_LILY2_CONSTH:
+            tmp = bits (insn, bitsize + bitpos - 1, bitpos);
+            tmp = sign_extend (tmp, bitsize - 1, 0) << rightshift;
+            tmp += relocation;
+            tmp >>= rightshift;
+            insn = replace_bits (insn, bitsize + bitpos - 1, bitpos, tmp);
+            break;
+
+        case R_LILY2_JUMPTARG:
+            tmp = relocation - (input_section->output_section->vma +
+                    input_section->output_offset + rel->r_offset);
+            tmp >>= rightshift;
+            tmp = sign_extend (tmp, bitsize - 1, 0);
+            insn = replace_bits (insn, bitsize + bitpos - 1, bitpos, tmp);
+            break;
+    }
+
+    bfd_put_32 (input_bfd, insn, contents);
+
+#if DEBUG
+    printf ("-----> Leave function (lily2_elf_final_link_relocate).\n");
+#endif
+
+    return r;
+}
+
+static bfd_boolean
+lily2_elf_relocate_section (bfd *output_bfd,
+                            struct bfd_link_info *info,
+                            bfd *input_bfd,
+                            asection *input_section,
+                            bfd_byte *contents,
+                            Elf_Internal_Rela *relocs,
+                            Elf_Internal_Sym *local_syms,
+                            asection **local_sections)
+{
+    Elf_Internal_Shdr *symtab_hdr;
+    struct elf_link_hash_entry **sym_hashes;
+    Elf_Internal_Rela *rel;
+    Elf_Internal_Rela *relend;
+
+    symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+    sym_hashes = elf_sym_hashes (input_bfd);
+    relend = relocs + input_section->reloc_count;
+
+    for (rel = relocs; rel < relend; ++rel) {
+        reloc_howto_type *howto;
+        unsigned long r_symndx;
+        Elf_Internal_Sym *sym;
+        asection *sec;
+        struct elf_link_hash_entry *h;
+        bfd_vma relocation;
+        bfd_reloc_status_type r;
+        const char *name = NULL;
+        int r_type;
+
+        r_type = ELF32_R_TYPE (rel->r_info);
+        r_symndx = ELF32_R_SYM (rel->r_info);
+
+        if ((unsigned int) r_type >
+                (sizeof elf_lily2_howto_table / sizeof (reloc_howto_type))) {
+  	        abort ();
+        }
+
+        howto = elf_lily2_howto_table + ELF32_R_TYPE (rel->r_info);
+        h = NULL;
+        sym = NULL;
+        sec = NULL;
+
+        if (r_symndx < symtab_hdr->sh_info) {
+            sym = local_syms + r_symndx;
+            sec = local_sections[r_symndx];
+            relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+
+	        name = bfd_elf_string_from_elf_section
+	          (input_bfd, symtab_hdr->sh_link, sym->st_name);
+	        name = (name == NULL) ? bfd_section_name (input_bfd, sec) : name;
+
+        } else {
+       	    bfd_boolean unresolved_reloc, warned;
+
+       	    RELOC_FOR_GLOBAL_SYMBOL (info, input_bfd, input_section, rel,
+       	  			   r_symndx, symtab_hdr, sym_hashes,
+       	  			   h, sec, relocation,
+       	  			   unresolved_reloc, warned);
+	    }
+
+       r = lily2_elf_final_link_relocate (howto, input_bfd, input_section,
+					contents, rel, relocation);
+    }
+
+    return TRUE;
+}
 
 /* Map BFD reloc types to lily2 ELF reloc types.  */
 
@@ -401,14 +288,9 @@ struct lily2_reloc_map
 static const struct lily2_reloc_map lily2_reloc_map[] =
 {
   { BFD_RELOC_NONE, R_LILY2_NONE },
-  { BFD_RELOC_32, R_LILY2_32 },
-  { BFD_RELOC_16, R_LILY2_16 },
-  { BFD_RELOC_8, R_LILY2_8 },
   { BFD_RELOC_LO16, R_LILY2_CONSTL },
   { BFD_RELOC_HI16, R_LILY2_CONSTH },
   { BFD_RELOC_32_GOT_PCREL, R_LILY2_JUMPTARG },
-  { BFD_RELOC_VTABLE_INHERIT, R_LILY2_GNU_VTINHERIT },
-  { BFD_RELOC_VTABLE_ENTRY, R_LILY2_GNU_VTENTRY },
 };
 
 static reloc_howto_type *
@@ -467,5 +349,7 @@ lily2_info_to_howto_rel (bfd *abfd ATTRIBUTE_UNUSED,
 #define elf_backend_object_p	lily2_elf_object_p
 #define elf_backend_final_write_processing \
 				lily2_elf_final_write_processing
+
+#define elf_backend_relocate_section lily2_elf_relocate_section
 
 #include "elf32-target.h"

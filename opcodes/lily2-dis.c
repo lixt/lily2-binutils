@@ -29,7 +29,7 @@
 #include "libiberty.h"
 #include "opcode/lily2.h"
 
-#define EXTEND29(x) ((x) & (unsigned long) 0x10000000 ? ((x) | (unsigned long) 0xf0000000) : ((x)))
+#define EXTEND21(x) ((x) & (unsigned long) 0x00100000 ? ((x) | (unsigned long) 0xfff00000) : ((x)))
 
 /* Storage for error information. */
 static char error[100];
@@ -49,68 +49,68 @@ const size_t lily2_num_dis_functional_units = ARRAY_SIZE (lily2_dis_functional_u
 
 const struct lily2_condition lily2_dis_conditions[] =
 {
-    {"      ", 0x0},
-    {"{ cf0}", 0x1},
-    {"{ cf1}", 0x2},
-    {"{ cf2}", 0x3},
-    {"{!cf0}", 0x4},
-    {"{!cf1}", 0x5},
-    {"{!cf2}", 0x6},
+    {"     ", 0x0},
+    {"{ gc}", 0x1},
+    {"{ xc}", 0x2},
+    {"{ yc}", 0x3},
+    {"{!gc}", 0x4},
+    {"{!xc}", 0x5},
+    {"{!yc}", 0x6},
 };
 const size_t lily2_num_dis_conditions = ARRAY_SIZE (lily2_dis_conditions);
 
 const struct lily2_register lily2_dis_registers[] =
 {
-    {"a0" , 0 }, {"a1" , 1 }, {"a2" , 2 }, {"a3" , 3 },
-    {"a4" , 4 }, {"a5" , 5 }, {"a6" , 6 }, {"a7" , 7 },
-    {"a8" , 8 }, {"a9" , 9 }, {"a10", 10}, {"a11", 11},
-    {"a12", 12}, {"a13", 13}, {"a14", 14}, {"a15", 15},
-    {"a16", 16}, {"a17", 17}, {"a18", 18}, {"a19", 19},
-    {"a20", 20}, {"a21", 21}, {"a22", 22}, {"a23", 23},
-    {"c0" , 24}, {"c1" , 25}, {"c2" , 26}, {"c3" , 27},
-    {"c4" , 28}, {"c5" , 29}, {"c6" , 30}, {"c7" , 31},
-    {"b0" , 32}, {"b1" , 33}, {"b2" , 34}, {"b3" , 35},
-    {"b4" , 36}, {"b5" , 37}, {"b6" , 38}, {"b7" , 39},
-    {"b8" , 40}, {"b9" , 41}, {"b10", 42}, {"b11", 43},
-    {"b12", 44}, {"b13", 45}, {"b14", 46}, {"b15", 47},
-    {"b16", 48}, {"b17", 49}, {"b18", 50}, {"b19", 51},
-    {"b20", 52}, {"b21", 53}, {"b22", 54}, {"b23", 55},
-    {"c0" , 56}, {"c1" , 57}, {"c2" , 58}, {"c3" , 59},
-    {"c4" , 60}, {"c5" , 61}, {"c6" , 62}, {"c7" , 63},
+    {"x0" , 0 }, {"x1" , 1 }, {"x2" , 2 }, {"x3" , 3 },
+    {"x4" , 4 }, {"x5" , 5 }, {"x6" , 6 }, {"x7" , 7 },
+    {"x8" , 8 }, {"x9" , 9 }, {"x10", 10}, {"x11", 11},
+    {"x12", 12}, {"x13", 13}, {"x14", 14}, {"x15", 15},
+    {"x16", 16}, {"x17", 17}, {"x18", 18}, {"x19", 19},
+    {"x20", 20}, {"x21", 21}, {"x22", 22}, {"x23", 23},
+    {"g0" , 24}, {"g1" , 25}, {"g2" , 26}, {"g3" , 27},
+    {"g4" , 28}, {"g5" , 29}, {"g6" , 30}, {"g7" , 31},
+    {"y0" , 32}, {"y1" , 33}, {"y2" , 34}, {"y3" , 35},
+    {"y4" , 36}, {"y5" , 37}, {"y6" , 38}, {"y7" , 39},
+    {"y8" , 40}, {"y9" , 41}, {"y10", 42}, {"y11", 43},
+    {"y12", 44}, {"y13", 45}, {"y14", 46}, {"y15", 47},
+    {"y16", 48}, {"y17", 49}, {"y18", 50}, {"y19", 51},
+    {"y20", 52}, {"y21", 53}, {"y22", 54}, {"y23", 55},
+    {"g0" , 56}, {"g1" , 57}, {"g2" , 58}, {"g3" , 59},
+    {"g4" , 60}, {"g5" , 61}, {"g6" , 62}, {"g7" , 63},
 };
 const size_t lily2_num_dis_registers = ARRAY_SIZE (lily2_dis_registers);
 
 const struct lily2_register lily2_dis_register_pairs[] =
 {
-    {"a1:a0"  , 0 }, {"a3:a2"  , 2 },
-    {"a5:a4"  , 4 }, {"a7:a6"  , 6 },
-    {"a9:a8"  , 8 }, {"a11:a10", 10},
-    {"a13:a12", 12}, {"a15:a14", 14},
-    {"a17:a16", 16}, {"a19:a18", 18},
-    {"a21:a20", 20}, {"a23:a22", 22},
-    {"c1:c0"  , 24}, {"c3:c2"  , 26},
-    {"c5:c4"  , 28}, {"c7:c5"  , 30},
-    {"b1:b0"  , 32}, {"b3:b2"  , 34},
-    {"b5:b4"  , 36}, {"b7:b6"  , 38},
-    {"b9:b8"  , 40}, {"b11:b10", 42},
-    {"b13:b12", 44}, {"b15:b14", 46},
-    {"b17:b16", 48}, {"b19:b18", 50},
-    {"b21:b20", 52}, {"b23:b22", 54},
-    {"c1:c0"  , 56}, {"c3:c2"  , 58},
-    {"c5:c4"  , 60}, {"c7:c5"  , 62},
+    {"x1:x0"  , 0 }, {"x3:x2"  , 2 },
+    {"x5:x4"  , 4 }, {"x7:x6"  , 6 },
+    {"x9:x8"  , 8 }, {"x11:x10", 10},
+    {"x13:x12", 12}, {"x15:x14", 14},
+    {"x17:x16", 16}, {"x19:x18", 18},
+    {"x21:x20", 20}, {"x23:x22", 22},
+    {"g1:g0"  , 24}, {"g3:g2"  , 26},
+    {"g5:g4"  , 28}, {"g7:g5"  , 30},
+    {"y1:y0"  , 32}, {"y3:y2"  , 34},
+    {"y5:y4"  , 36}, {"y7:y6"  , 38},
+    {"y9:y8"  , 40}, {"y11:y10", 42},
+    {"y13:y12", 44}, {"y15:y14", 46},
+    {"y17:y16", 48}, {"y19:y18", 50},
+    {"y21:y20", 52}, {"y23:y22", 54},
+    {"g1:g0"  , 56}, {"g3:g2"  , 58},
+    {"g5:g4"  , 60}, {"g7:g5"  , 62},
 };
 const size_t lily2_num_dis_register_pairs = ARRAY_SIZE (lily2_dis_register_pairs);
 
 const struct lily2_register lily2_dis_register_pair_pairs[] =
 {
-    {"a3:a2:a1:a0"    , 0 }, {"a7:a6:a5:a4"    , 4 },
-    {"a11:a10:a9:a8"  , 8 }, {"a15:a14:a13:a12", 12},
-    {"a19:a18:a17:a16", 16}, {"a23:a22:a21:a20", 20},
-    {"c3:c2:c1:c0"    , 24}, {"c7:c6:c5:c4"    , 28},
-    {"b3:b2:b1:b0"    , 32}, {"b7:b6:b5:b4"    , 36},
-    {"b11:b10:b9:b8"  , 40}, {"b15:b14:b13:b12", 44},
-    {"b19:b18:b17:b16", 48}, {"b23:b22:b21:b20", 52},
-    {"c3:c2:c1:c0"    , 56}, {"c7:c6:c5:c4"    , 60},
+    {"x3:x2:x1:x0"    , 0 }, {"x7:x6:x5:x4"    , 4 },
+    {"x11:x10:x9:x8"  , 8 }, {"x15:x14:x13:x12", 12},
+    {"x19:x18:x17:x16", 16}, {"x23:x22:x21:x20", 20},
+    {"g3:g2:g1:g0"    , 24}, {"g7:g6:g5:g4"    , 28},
+    {"y3:y2:y1:y0"    , 32}, {"y7:y6:y5:y4"    , 36},
+    {"y11:y10:y9:y8"  , 40}, {"y15:y14:y13:y12", 44},
+    {"y19:y18:y17:y16", 48}, {"y23:y22:y21:y20", 52},
+    {"g3:g2:g1:g0"    , 56}, {"g7:g6:g5:g4"    , 60},
 };
 const size_t lily2_num_dis_register_pair_pairs = ARRAY_SIZE (lily2_dis_register_pair_pairs);
 
@@ -547,6 +547,38 @@ lily2_print_register_pair_pair (char param_ch,
     return retval;
 }
 
+/* Prints the address operand. */
+static int
+lily2_print_address (unsigned long memaddr,
+                     char param_ch,
+		             char *encoding,
+		             unsigned long insn,
+		             struct disassemble_info *info)
+{
+#if DEBUG
+    printf ("<----- Enter function (lily2_print_address).\n");
+    printf ("       memaddr: 0x%08x.\n", memaddr);
+    printf ("       param_ch: `%c'.\n", param_ch);
+    printf ("       encoding: ``%s''.\n", encoding);
+    printf ("       insn: 0x%08x.\n", insn);
+#endif
+
+    int retval;
+
+    unsigned long addr_insn = lily2_extract (param_ch, encoding, insn) << 2;
+    long addr = memaddr + EXTEND21 (addr_insn);
+
+    (*info->print_address_func) (addr, info);
+
+#if DEBUG
+    printf ("       extract str = 0x%x", addr_insn);
+    printf ("-----> Leave function (lily2_print_address).\n");
+    printf ("\n");
+#endif
+
+    return retval = 1;
+}
+
 /* Prints the immediate operand. */
 static int
 lily2_print_immediate (char param_ch,
@@ -742,8 +774,13 @@ print_insn (bfd_vma memaddr, struct disassemble_info *info)
                         break;
 
                     case 'i': /* Immediate. */
-                        retval = lily2_print_immediate
-                            (*++s, opcode->encoding, insn, info);
+                        if (opcode->flag == RELOC_32_GOT_PCREL) {
+                            retval = lily2_print_address
+                                (memaddr, *++s, opcode->encoding, insn, info);
+                        } else {
+                            retval = lily2_print_immediate
+                                (*++s, opcode->encoding, insn, info);
+                        }
                         break;
 
                     case '(':
